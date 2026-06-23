@@ -4,25 +4,19 @@ import sys
 import urllib.request
 from http.server import BaseHTTPRequestHandler
 
-# Force instant unbuffered console output alignment
 sys.stdout.reconfigure(line_buffering=True)
 
 def escape_html(text_string):
-    """Sanitizes raw string variables to prevent Telegram API parse drops."""
     return str(text_string).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
 class handler(BaseHTTPRequestHandler):
-    """
-    Official Vercel-compliant serverless execution class routing.
-    Forces direct dynamic environment lookup queries to bypass git history artifacts.
-    """
     def do_POST(self):
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length).decode('utf-8')
         
-        # Force dynamic environment dictionary lookups directly from Vercel's cloud vault settings
-        raw_token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
-        chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
+        # Load parameters dynamically out of Vercel's console settings variables
+        raw_token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip().replace('"', '').replace("'", "")
+        chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip().replace('"', '').replace("'", "")
         
         telegram_status = "SKIPPED_OR_MISSING_KEYS"
         error_logs = "None"
@@ -37,12 +31,20 @@ class handler(BaseHTTPRequestHandler):
             signature = escape_html(payload.get("signature") or payload.get("transactionId", "fallback_cloud_sig"))
             
             if raw_token and chat_id:
-                # Strip any historical prefix tracking artifacts cleanly
-                bot_token = raw_token[3:] if raw_token.lower().startswith("bot") else raw_token
+                # Direct string parsing patch block to remove formatting artifacts or duplicated headers
+                clean_token = raw_token
+                if clean_token.lower().startswith("bot"):
+                    clean_token = clean_token[3:]
+                
+                # Double check for recursive nesting blocks inside strings
+                if ":" in clean_token and "bot" in clean_token.split(":")[1].lower():
+                    parts = clean_token.split(":")
+                    clean_token = f"{parts[0]}:{parts[1].lower().replace('bot', '')}"
                 
                 message_text = f"<b>💰 CRITICAL BUSINESS REVENUE LOGGED 💰</b>\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n⚙️ <b>Engine</b>: Autonomous Data Refinery\n📊 <b>Asset Purchased</b>: Market Intelligence Matrix\n💸 <b>Revenue Collected</b>: {amount_sol} SOL\n📨 <b>Delivery Pipeline</b>: Dispatched to Inbox\n📧 <b>Target Client</b>: <code>{customer_email}</code>\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n<i>🟢 System Node Status: 100% Operational</i>"
                 
-                url = f"https://telegram.org{bot_token}/sendMessage"
+                # Format complete fully qualified link structure explicitly bypassing port parsing drops
+                url = f"https://telegram.org{clean_token}/sendMessage"
                 api_payload = json.dumps({
                     "chat_id": str(chat_id),
                     "text": message_text,
@@ -66,7 +68,6 @@ class handler(BaseHTTPRequestHandler):
             else:
                 telegram_status = "MISSING_ENV_VARIABLES_ON_VERCEL"
                 
-            # Send dynamic runtime status codes back to your terminal request window
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
@@ -86,4 +87,3 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({"status": "CRASHED", "details": str(e)}).encode('utf-8'))
             return
-# Production environment sync block sequence alpha
