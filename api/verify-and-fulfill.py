@@ -14,7 +14,7 @@ class handler(BaseHTTPRequestHandler):
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length).decode('utf-8')
         
-        # Load parameters dynamically out of Vercel's console settings variables
+        # Pull raw tokens dynamically out of Vercel's environment matrix
         raw_token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip().replace('"', '').replace("'", "")
         chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip().replace('"', '').replace("'", "")
         
@@ -31,19 +31,24 @@ class handler(BaseHTTPRequestHandler):
             signature = escape_html(payload.get("signature") or payload.get("transactionId", "fallback_cloud_sig"))
             
             if raw_token and chat_id:
-                # Direct string parsing patch block to remove formatting artifacts or duplicated headers
+                # Absolute, bulletproof token sanitization logic block
                 clean_token = raw_token
+                
+                # If the user put "bot" at the start of the environment variable, drop it
                 if clean_token.lower().startswith("bot"):
                     clean_token = clean_token[3:]
                 
-                # Double check for recursive nesting blocks inside strings
-                if ":" in clean_token and "bot" in clean_token.split(":")[1].lower():
+                # Clean out any accidental recursive "bot" strings before or after colons
+                if ":" in clean_token:
                     parts = clean_token.split(":")
-                    clean_token = f"{parts[0]}:{parts[1].lower().replace('bot', '')}"
-                
+                    prefix = parts[0].lower().replace("bot", "").strip()
+                    suffix = parts[1].lower().replace("bot", "").strip()
+                    # Rebuild the token using the actual case-preserved original string characters
+                    clean_token = f"{raw_token.split(':')[0]}..{raw_token.split(':')[1]}".replace("bot", "").replace("BOT", "").replace("..", ":").strip()
+
                 message_text = f"<b>💰 CRITICAL BUSINESS REVENUE LOGGED 💰</b>\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n⚙️ <b>Engine</b>: Autonomous Data Refinery\n📊 <b>Asset Purchased</b>: Market Intelligence Matrix\n💸 <b>Revenue Collected</b>: {amount_sol} SOL\n📨 <b>Delivery Pipeline</b>: Dispatched to Inbox\n📧 <b>Target Client</b>: <code>{customer_email}</code>\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n<i>🟢 System Node Status: 100% Operational</i>"
                 
-                # Format complete fully qualified link structure explicitly bypassing port parsing drops
+                # Assemble the url link parameters
                 url = f"https://telegram.org{clean_token}/sendMessage"
                 api_payload = json.dumps({
                     "chat_id": str(chat_id),
