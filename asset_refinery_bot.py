@@ -1,3 +1,4 @@
+import os
 import requests
 from bs4 import BeautifulSoup
 
@@ -5,16 +6,18 @@ def get_top_projects():
     url = "https://api.github.com/search/repositories?q=stars:>1&sort=stars&order=desc"
     response = requests.get(url).json()
     projects = []
-    for item in response["items"][:5]:
-        project = {
-            "name": item["full_name"],
-            "description": item["description"],
-            "language": item["language"],
-            "stars": item["stargazers_count"],
-            "forks": item["forks_count"],
-            "open_issues": item["open_issues_count"]
-        }
-        projects.append(project)
+    # Safeguard against API issues by making sure items exist
+    if "items" in response:
+        for item in response["items"][:5]:
+            project = {
+                "name": item["full_name"],
+                "description": item["description"],
+                "language": item["language"],
+                "stars": item["stargazers_count"],
+                "forks": item["forks_count"],
+                "open_issues": item["open_issues_count"]
+            }
+            projects.append(project)
     return projects
 
 def format_projects(projects):
@@ -32,8 +35,14 @@ def format_projects(projects):
 def main():
     projects = get_top_projects()
     formatted_data = format_projects(projects)
-    with open('market_intelligence.md', 'w') as file:
+    
+    # Force explicit absolute directory file creation parameters
+    root_path = os.path.dirname(os.path.abspath(__file__))
+    target_file = os.path.join(root_path, "market_intelligence.md")
+    
+    with open(target_file, 'w') as file:
         file.write(formatted_data)
+    print("💾 Market intelligence asset written successfully to root directory.")
 
 if __name__ == "__main__":
     main()
