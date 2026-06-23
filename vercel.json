@@ -3,6 +3,10 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/api/verify-and-fulfill",
+      "destination": "/api/verify-and-fulfill.py"
+    },
+    {
       "source": "/dashboard",
       "destination": "/dashboard.html"
     }
