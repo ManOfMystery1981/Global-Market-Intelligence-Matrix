@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Global Market Intelligence Matrix</title>
+    <style>
+        body {
+            background: #0b0e14;
+            color: #f0f2f5;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            width: 100%;
+        }
+        h1 { color: #14F195; margin-top: 0; font-size: 24px; }
+        p { color: #8b949e; line-height: 1.6; font-size: 15px; }
+        .metrics-box {
+            background: #0d1117;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 25px 0;
+            text-align: left;
+            font-family: monospace;
+            font-size: 13px;
+            border-left: 4px solid #9945FF;
+        }
+        .input-field {
+            width: 90%;
+            padding: 12px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #f0f2f5;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+            font-weight: bold;
+        }
+        /* --- Modern Payment Button with Glow --- */
+        .btn-pay {
+            background: linear-gradient(135deg, #14F195 0%, #0dcc7a 100%);
+            color: #000000;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px 32px;
+            font-weight: 700;
+            font-size: 16px;
+            border-radius: 50px;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(20, 241, 149, 0.35);
+            width: 85%;
+            border: none;
+            margin-bottom: 15px;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            text-shadow: 0 0 8px rgba(0, 0, 0, 0.15), 0 0 20px rgba(0, 0, 0, 0.05);
+        }
+        .btn-pay .btn-text {
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 0 12px rgba(0, 0, 0, 0.25), 0 0 30px rgba(0, 0, 0, 0.1);
+        }
+        .btn-pay:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 28px rgba(20, 241, 149, 0.5);
+        }
+        .btn-pay:active {
+            transform: scale(0.97);
+        }
+        .btn-pay .icon {
+            font-size: 20px;
+            filter: drop-shadow(0 0 4px rgba(0,0,0,0.2));
+        }
+        /* --- Solid Blue Crypto Badge --- */
+        .badge-crypto-solid {
+            display: inline-block;
+            background: #2563eb;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 5px 14px;
+            border-radius: 30px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+            margin-left: 6px;
+        }
+        .btn-secondary {
+            background: transparent;
+            color: #14F195;
+            border: 1px solid #14F195;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-secondary:hover { background: rgba(20, 241, 149, 0.1); }
+        .btn-secondary .heart {
+            color: #ff3b30;
+            font-size: 16px;
+        }
+        .status-msg {
+            font-size: 13px;
+            color: #14F195;
+            margin-top: 15px;
+            font-family: monospace;
+        }
+        .manual-instructions {
+            display: none;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 16px;
+            text-align: left;
+            font-size: 13px;
+            color: #8b949e;
+            margin-top: 15px;
+            line-height: 1.8;
+        }
+        .manual-instructions code {
+            background: #161b22;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #14F195;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .manual-instructions strong { color: #f0f2f5; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>📊 Autonomous Market Intelligence</h1>
+    <p>Unlock real-time data-arbitrage data compiling the top trending global software structures, system metrics, and dependency metrics directly on-chain.</p>
+    <div class="metrics-box">
+        ⚡ Cost: 0.01 SOL (~$1.50)<br>
+        📦 Delivery: Instant automated email<br>
+        🔒 Network: Sovereign Web3 Infrastructure
+    </div>
+
+    <input type="email" id="customerEmail" class="input-field" placeholder="Enter your target delivery email" required>
+    
+    <!-- Modern MoonPay Payment Button with Glow -->
+    <button id="moonpayButton" class="btn-pay" onclick="handleCheckout()">
+        <span class="icon">💳</span>
+        <span class="btn-text">Pay with MoonPay</span>
+        <span class="badge-crypto-solid">Crypto Accepted</span>
+    </button>
+
+    <div id="statusDisplay" class="status-msg">Sovereign Checkout System Standby. Ready.</div>
+    
+    <!-- Donation Button with Red Heart -->
+    <button class="btn-secondary" onclick="showDonationInstructions()">
+        <span class="heart">❤️</span> Donations Accepted!
+    </button>
+    <div id="manualInstructions" class="manual-instructions"></div>
+</div>
+
+<script>
+    const WALLET_ADDRESS = "3rLapKiA4SfTQMMMFfkZSfkT12iFXQPiKv7w9mzqKZqh";
+    const AMOUNT_SOL = "0.01";
+    const MOONPAY_URL = "https://moonpay.hel.io/pay/6a3a990f6cfeae7d22a88655";
+
+    // --- Play a "swoosh" sound on payment button click ---
+    function playSwooshSound() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Create a noise-like swoosh using multiple oscillators
+            const now = audioCtx.currentTime;
+            
+            // High-frequency swoosh (descending)
+            const osc1 = audioCtx.createOscillator();
+            const gain1 = audioCtx.createGain();
+            osc1.connect(gain1);
+            gain1.connect(audioCtx.destination);
+            osc1.frequency.setValueAtTime(1200, now);
+            osc1.frequency.exponentialRampToValueAtTime(400, now + 0.12);
+            osc1.type = 'sine';
+            gain1.gain.setValueAtTime(0.15, now);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+            // Low-frequency swoosh (ascending)
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            osc2.connect(gain2);
+            gain2.connect(audioCtx.destination);
+            osc2.frequency.setValueAtTime(200, now);
+            osc2.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+            osc2.type = 'sine';
+            gain2.gain.setValueAtTime(0.1, now);
+            gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+
+            // Start both oscillators
+            osc1.start(now);
+            osc1.stop(now + 0.12);
+            osc2.start(now);
+            osc2.stop(now + 0.1);
+
+        } catch (e) {
+            // Silently fail if audio is not supported
+            console.log('Audio not supported');
+        }
+    }
+
+    function handleCheckout() {
+        // Play swoosh sound
+        playSwooshSound();
+
+        const emailInput = document.getElementById("customerEmail").value.trim();
+        const statusDiv = document.getElementById("statusDisplay");
+
+        if (!emailInput || !emailInput.includes("@")) {
+            statusDiv.style.color = "#f85149";
+            statusDiv.innerText = "❌ Error: Please input a valid delivery email address.";
+            return;
+        }
+
+        window._customerEmail = emailInput;
+        window.open(MOONPAY_URL, '_blank');
+        
+        statusDiv.style.color = "#14F195";
+        statusDiv.innerText = "✅ MoonPay opened. Complete your payment, then wait for your report via email.";
+    }
+
+    function showDonationInstructions() {
+        const container = document.getElementById('manualInstructions');
+        const statusDiv = document.getElementById('statusDisplay');
+
+        container.style.display = 'block';
+        container.innerHTML = `
+            <strong>❤️ Donations Accepted!</strong><br>
+            This project is maintained by independent developers. Your support helps keep it running.<br><br>
+            <strong>1.</strong> Open your Solana wallet app.<br>
+            <strong>2.</strong> Send any amount of SOL you wish to donate to:<br>
+            <code style="display:block;background:#0d1117;padding:8px;margin:8px 0;border-radius:4px;word-break:break-all;">${WALLET_ADDRESS}</code>
+            <br>
+            <span style="color: #FFD700;">🙏 Thank you for your generosity! Every bit helps.</span>
+            <br><br>
+            <button class="btn-secondary" onclick="document.getElementById('manualInstructions').style.display='none'; document.getElementById('statusDisplay').innerText='Sovereign Checkout System Standby. Ready.';">
+                Dismiss
+            </button>
+        `;
+        statusDiv.style.color = "#FFD700";
+        statusDiv.innerText = "❤️ Donation instructions displayed below.";
+    }
+</script>
+
+</body>
+</html>

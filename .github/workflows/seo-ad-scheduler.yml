@@ -1,0 +1,52 @@
+name: Autonomous SEO & Advertisement Broadcaster
+
+on:
+  schedule:
+    # Triggers the execution matrix automatically every 12 hours (at 00:00 and 12:00 UTC)
+    - cron: '0 */12 * * *'
+  workflow_dispatch: # Allows you to manually force an ad run from the GitHub UI
+
+jobs:
+  broadcast-ads:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Set Up Python Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Runtime Dependencies
+        run: |
+          cd finance
+          pip install -r requirements.txt || pip install requests
+
+      - name: Execute SEO Pipeline Engine
+        env:
+          # Wire up your WordPress authentication keys safely from your GitHub Repository Secrets vault
+          WP_USER: ${{ secrets.WP_USER }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+          WP_URL: ${{ secrets.WP_URL }}
+        run: |
+          cd finance
+          python3 -c "import seo_optimization_bot; print('Cloud Broadcasting Active')"
+
+      - name: Execute SEO Engine & Push Static Updates
+        run: |
+          cd finance
+          python3 -c "import seo_optimization_bot"
+          
+          # Setup global robot credentials for your remote Git agent
+          git config --global user.name "refinery-seo-bot"
+          git config --global user.email "seo-bot@autonomous-refiner.internal"
+          
+          # Check if your python script actually wrote any new markdown pages
+          git add posts/*.md || true
+          
+          # Commit the updates back to the repo to trigger Vercel's build hook
+          git commit -m "chore(seo): automated multi-agent static content generation run" || echo "No new search trends found."
+          git push origin main || echo "Workspace repository already up to date."
