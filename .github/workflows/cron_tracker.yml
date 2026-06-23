@@ -1,7 +1,9 @@
 name: Autonomous Multi-Agent Corporate Engine
 
 on:
-  workflow_dispatch: # Allows manual trigger click events inside the dashboard panel
+  schedule:
+    - cron: '*/30 * * * *' # Automatically wakes up and executes every 30 minutes 24/7
+  workflow_dispatch: # Keeps your manual browser trigger button active
 
 jobs:
   run-pipeline:
