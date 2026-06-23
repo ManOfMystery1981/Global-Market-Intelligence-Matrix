@@ -278,6 +278,10 @@ def main():
     print("📣 Spawning Marketing Bot broadcast engine...")
     subprocess.run(["python3", "marketing_bot.py"])
 
+    # Insert this line right after step 9 (marketing_bot.py) inside your main() execution layout:
+    print("🧹 Triggering static file folder matrix cleanup pipeline...")
+    subprocess.run(["python3", "cleanup_old_posts.py"])
+
     log_system_event("DAEMON_SHUTDOWN", "Execution successful. Cloud runner cycle completed clean.")
     print("✅ Execution successful. Cloud runner closing down to save minutes.\n")
 
