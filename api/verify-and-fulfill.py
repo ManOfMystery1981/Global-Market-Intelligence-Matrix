@@ -4,8 +4,9 @@ import time
 import os
 import sys
 import urllib.request
+from http.server import BaseHTTPRequestHandler
 
-# Force instant unbuffered console output
+# Force instant unbuffered console output alignment
 sys.stdout.reconfigure(line_buffering=True)
 
 def verify_solana_signature_on_chain(signature_string, helius_token):
@@ -14,8 +15,9 @@ def verify_solana_signature_on_chain(signature_string, helius_token):
         print("🛠️ Testing Flag Detected: Allowing sandbox bypass payload parameters.")
         return True
 
-    rpc_url = f"https://helius-rpc.com{helius_token}" if helius_token else "https://solana.com"
-    MY_WALLET = "3rLapKiA4SfTQMMMFfkZSfkT12iFXQPiKv7w9mzqKZqh"
+    rpc_url = f"https://helius-rpc.com{helius_token}" if helius_token else "
+"
+MY_WALLET = "3rLapKiA4SfTQMMMFfkZSfkT12iFXQPiKv7w9mzqKZqh"
     EXPECTED_AMOUNT_LAMPORTS = 10000000  # 0.01 SOL
 
     payload = json.dumps({
@@ -46,7 +48,11 @@ def verify_solana_signature_on_chain(signature_string, helius_token):
     except Exception:
         return False
 
-class handler(BaseHTTPRequestHandler if 'BaseHTTPRequestHandler' in globals() else object):
+class handler(BaseHTTPRequestHandler):
+    """
+    Official Vercel-compliant serverless execution class routing.
+    Inherits cleanly from BaseHTTPRequestHandler to process webhook streams.
+    """
     def do_POST(self):
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length).decode('utf-8')
@@ -62,10 +68,11 @@ class handler(BaseHTTPRequestHandler if 'BaseHTTPRequestHandler' in globals() el
                 amount_sol = payload.get("amount") or payload.get("totalAmount", 0.01)
                 signature = payload.get("signature") or payload.get("transactionId", f"cloud_sig_{int(time.time())}")
                 
-                # Cryptographic Cryptanalysis Link Barrier Check
+                # Cryptographic Link Verification Barrier Check
                 helius_key = os.environ.get("HELIUS_API_KEY", "")
                 if not verify_solana_signature_on_chain(signature, helius_key):
                     self.send_response(401)
+                    self.send_header('Content-Type', 'application/json')
                     self.end_headers()
                     self.wfile.write(json.dumps({"error": "Cryptographic signature validation failed on-chain."}).encode('utf-8'))
                     return
@@ -106,11 +113,15 @@ class handler(BaseHTTPRequestHandler if 'BaseHTTPRequestHandler' in globals() el
                 self.end_headers()
                 self.wfile.write(json.dumps({"status": "SUCCESSFUL_FULFILLMENT", "signature_logged": signature}).encode('utf-8'))
                 return
+            else:
+                self.send_response(400)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "Non-success status transaction parameter bypassed."}).encode('utf-8'))
+                return
         except Exception as e:
             self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({"error": str(e)}).encode('utf-8'))
             return
-
-# Compatibility patch layer hook configuration for clean Vercel WSGI bindings compatibility
-from http.server import BaseHTTPRequestHandler
