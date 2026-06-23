@@ -1,28 +1,26 @@
 name: Autonomous Multi-Agent Corporate Engine
 
 on:
-  schedule:
-    - cron: '*/30 * * * *' # Automatically executes every 30 minutes 24/7
-  workflow_dispatch: # Activates the manual "Run workflow" override button in your browser
+  workflow_dispatch: # Allows manual trigger click events inside the dashboard panel
 
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout Repository Code
+    - name: Checkout Code Base
       uses: actions/checkout@v4
 
-    - name: Initialize Cloud Python Node
+    - name: Setup System Environment
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-        cache: 'pip'
 
-    - name: Provision Cloud Dependencies
+    - name: Provision Core Libraries
       run: |
+        python -m pip install --upgrade pip
         pip install requests beautifulsoup4 solana solders
 
-    - name: Execute Autonomous On-Chain Pipeline
+    - name: Execute Corporate Boardroom
       env:
         CORPORATE_EMAIL_API_KEY: ${{ secrets.CORPORATE_EMAIL_API_KEY }}
         CORPORATE_SENDER_EMAIL: ${{ secrets.CORPORATE_SENDER_EMAIL }}
