@@ -5,9 +5,9 @@ Master programming by recreating your favorite technologies from scratch.
 
 ### Metrics:
 * Languages: Markdown
-* Stars: 518621
-* Forks: 49056
-* Open Issues: 509
+* Stars: 518862
+* Forks: 49080
+* Open Issues: 510
 
 ## sindresorhus/awesome
 
@@ -16,9 +16,9 @@ Master programming by recreating your favorite technologies from scratch.
 
 ### Metrics:
 * Languages: None
-* Stars: 478087
-* Forks: 35504
-* Open Issues: 86
+* Stars: 478240
+* Forks: 35515
+* Open Issues: 88
 
 ## freeCodeCamp/freeCodeCamp
 
@@ -27,9 +27,9 @@ freeCodeCamp.org's open-source codebase and curriculum. Learn math, programming,
 
 ### Metrics:
 * Languages: TypeScript
-* Stars: 450278
-* Forks: 45215
-* Open Issues: 178
+* Stars: 450354
+* Forks: 45216
+* Open Issues: 186
 
 ## public-apis/public-apis
 
@@ -38,9 +38,9 @@ A collective list of free APIs
 
 ### Metrics:
 * Languages: Python
-* Stars: 443614
-* Forks: 48622
-* Open Issues: 1445
+* Stars: 443745
+* Forks: 48644
+* Open Issues: 1451
 
 ## EbookFoundation/free-programming-books
 
@@ -49,7 +49,7 @@ A collective list of free APIs
 
 ### Metrics:
 * Languages: Python
-* Stars: 390664
-* Forks: 66442
-* Open Issues: 83
+* Stars: 390692
+* Forks: 66441
+* Open Issues: 77
 
