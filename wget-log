@@ -1,0 +1,24 @@
+--2026-06-24 02:57:24--  https://search.google.com/search-console/verification-download?resource_id=https%3A%2F%2Fmanofmystery1981.github.io%2Fglobal-software-trends%2F
+Resolving search.google.com... 142.250.113.138, 142.250.113.100, 142.250.113.139, ...
+Connecting to search.google.com|142.250.113.138|:443... connected.
+HTTP request sent, awaiting response... 302 Found
+Location: https://accounts.google.com/ServiceLogin?service=sitemaps&passive=1209600&continue=https://search.google.com/search-console/verification-download?resource_id%3Dhttps://manofmystery1981.github.io/global-software-trends/&followup=https://search.google.com/search-console/verification-download?resource_id%3Dhttps://manofmystery1981.github.io/global-software-trends/ [following]
+--2026-06-24 02:57:29--  https://accounts.google.com/ServiceLogin?service=sitemaps&passive=1209600&continue=https://search.google.com/search-console/verification-download?resource_id%3Dhttps://manofmystery1981.github.io/global-software-trends/&followup=https://search.google.com/search-console/verification-download?resource_id%3Dhttps://manofmystery1981.github.io/global-software-trends/
+Resolving accounts.google.com... 142.250.113.84, 2607:f8b0:4023:1000::54
+Connecting to accounts.google.com|142.250.113.84|:443... connected.
+HTTP request sent, awaiting response... 302 Found
+Location: https://accounts.google.com/InteractiveLogin?continue=https://search.google.com/search-console/verification-download?resource_id%3Dhttps://manofmystery1981.github.io/global-software-trends/&followup=https://search.google.com/search-console/verification-download?resource_id%3Dhttps://manofmystery1981.github.io/global-software-trends/&passive=1209600&service=sitemaps&dsh=S1125111826:1782287849706799 [following]
+--2026-06-24 02:57:29--  https://accounts.google.com/InteractiveLogin?continue=https://search.google.com/search-console/verification-download?resource_id%3Dhttps://manofmystery1981.github.io/global-software-trends/&followup=https://search.google.com/search-console/verification-download?resource_id%3Dhttps://manofmystery1981.github.io/global-software-trends/&passive=1209600&service=sitemaps&dsh=S1125111826:1782287849706799
+Reusing existing connection to accounts.google.com:443.
+HTTP request sent, awaiting response... 302 Moved Temporarily
+Location: https://accounts.google.com/v3/signin/identifier?continue=https%3A%2F%2Fsearch.google.com%2Fsearch-console%2Fverification-download%3Fresource_id%3Dhttps%3A%2F%2Fmanofmystery1981.github.io%2Fglobal-software-trends%2F&dsh=S1125111826%3A1782287849706799&followup=https%3A%2F%2Fsearch.google.com%2Fsearch-console%2Fverification-download%3Fresource_id%3Dhttps%3A%2F%2Fmanofmystery1981.github.io%2Fglobal-software-trends%2F&passive=1209600&service=sitemaps&flowName=WebLiteSignIn&flowEntry=ServiceLogin&ifkv=AcDsRvyFvYFJiMuUwyOgYCJ-MC1AnoVbTSbmBvcJB-sldjj5sYxZqvzKHvFWtoctqaywaoju0CZzdA [following]
+--2026-06-24 02:57:29--  https://accounts.google.com/v3/signin/identifier?continue=https%3A%2F%2Fsearch.google.com%2Fsearch-console%2Fverification-download%3Fresource_id%3Dhttps%3A%2F%2Fmanofmystery1981.github.io%2Fglobal-software-trends%2F&dsh=S1125111826%3A1782287849706799&followup=https%3A%2F%2Fsearch.google.com%2Fsearch-console%2Fverification-download%3Fresource_id%3Dhttps%3A%2F%2Fmanofmystery1981.github.io%2Fglobal-software-trends%2F&passive=1209600&service=sitemaps&flowName=WebLiteSignIn&flowEntry=ServiceLogin&ifkv=AcDsRvyFvYFJiMuUwyOgYCJ-MC1AnoVbTSbmBvcJB-sldjj5sYxZqvzKHvFWtoctqaywaoju0CZzdA
+Reusing existing connection to accounts.google.com:443.
+HTTP request sent, awaiting response... 200 OK
+Length: unspecified [text/html]
+Saving to: ‘verification-download?resource_id=https:%2F%2Fmanofmystery1981.github.io%2Fglobal-software-trends%2F’
+
+                        verification-download?r     [<=>                                                                                                   ]       0  --.-KB/s                                      verification-download?re     [ <=>                                                                                                  ] 413.98K  2.01MB/s               verification-download?resource_id=https:%2F%2Fm     [  <=>                                                                                                 ] 926.76K  2.71MB/s    in 0.3s    
+
+2026-06-24 02:57:30 (2.71 MB/s) - ‘verification-download?resource_id=https:%2F%2Fmanofmystery1981.github.io%2Fglobal-software-trends%2F’ saved [949001]
+
