@@ -13,18 +13,17 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      # 1. FIXED STEP ORDER: Pull your repository code files onto the blank runner instance FIRST
+      # 1. Pull your repository code files onto the runner instance
       - name: Check out target repository code matrix
         uses: actions/checkout@v4
 
-      # 2. Initialize Setup Python Environment Runtime NOW that files are present
+      # 2. Deploy your clean Python environment without the pip caching constraint
       - name: Initialize Setup Python Environment Runtime
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
 
-      # 3. Handle dependency packages setup cleanly across the partition matrix
+      # 3. Handle dependency packages safely only if a file is present on disk
       - name: Install System Dependency Packages
         run: |
           python -m pip install --upgrade pip
