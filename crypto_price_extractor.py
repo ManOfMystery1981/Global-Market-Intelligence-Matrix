@@ -8,8 +8,8 @@ sys.stdout.reconfigure(line_buffering=True)
 def compile_marketing_summary_block():
     print("📡 Interrogating extended market indexes via backup node matrix...")
     
-    # Pure domain and path configuration to completely bypass urllib parsing bugs
-    host = "://coindesk.com"
+    # Clean domain string to completely bypass urllib/http port parsing bugs
+    host = "api.coindesk.com"
     path = "/v1/bpi/currentprice.json"
     
     headers = {
