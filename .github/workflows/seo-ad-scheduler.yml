@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      # 1. CRITICAL SECURE FIX: Natively pull your code files from GitHub onto the runner instance first
+      # 1. FIXED STEP ORDER: Pull your repository code files onto the blank runner instance FIRST
       - name: Check out target repository code matrix
         uses: actions/checkout@v4
 
-      # 2. Deploy your clean Python compilation baseline microservice container
+      # 2. Initialize Setup Python Environment Runtime NOW that files are present
       - name: Initialize Setup Python Environment Runtime
         uses: actions/setup-python@v5
         with:
