@@ -2,51 +2,42 @@ name: Autonomous SEO & Advertisement Broadcaster
 
 on:
   schedule:
-    # Triggers the execution matrix automatically every 12 hours (at 00:00 and 12:00 UTC)
+    # Runs the multi-agent engine automatically every 12 hours out of the cloud
     - cron: '0 */12 * * *'
-  workflow_dispatch: # Allows you to manually force an ad run from the GitHub UI
+  workflow_dispatch:
+    # Allows you to manually trigger a test execution run via the GitHub UI dashboard
 
 jobs:
   broadcast-ads:
+    name: broadcast-ads
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout Codebase
+      # 1. CRITICAL SECURE FIX: Natively pull your code files from GitHub onto the runner instance first
+      - name: Check out target repository code matrix
         uses: actions/checkout@v4
 
-      - name: Set Up Python Environment
+      # 2. Deploy your clean Python compilation baseline microservice container
+      - name: Initialize Setup Python Environment Runtime
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Install Runtime Dependencies
+      # 3. Handle dependency packages setup cleanly across the partition matrix
+      - name: Install System Dependency Packages
         run: |
-          cd finance
-          pip install -r requirements.txt || pip install requests
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Execute SEO Pipeline Engine
+      # 4. Fire your master background multi-agent refinery loops natively in the cloud
+      - name: Run Solana Daemon Engine Tracking Loops
         env:
-          # Wire up your WordPress authentication keys safely from your GitHub Repository Secrets vault
-          WP_USER: ${{ secrets.WP_USER }}
-          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
-          WP_URL: ${{ secrets.WP_URL }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          FALLBACK_EMAIL_USER: ${{ secrets.FALLBACK_EMAIL_USER }}
+          FALLBACK_EMAIL_PASS: ${{ secrets.FALLBACK_EMAIL_PASS }}
+          HELIUS_API_KEY: ${{ secrets.HELIUS_API_KEY }}
         run: |
-          cd finance
-          python3 -c "import seo_optimization_bot; print('Cloud Broadcasting Active')"
-
-      - name: Execute SEO Engine & Push Static Updates
-        run: |
-          cd finance
-          python3 -c "import seo_optimization_bot"
-          
-          # Setup global robot credentials for your remote Git agent
-          git config --global user.name "refinery-seo-bot"
-          git config --global user.email "seo-bot@autonomous-refiner.internal"
-          
-          # Check if your python script actually wrote any new markdown pages
-          git add posts/*.md || true
-          
-          # Commit the updates back to the repo to trigger Vercel's build hook
-          git commit -m "chore(seo): automated multi-agent static content generation run" || echo "No new search trends found."
-          git push origin main || echo "Workspace repository already up to date."
+          python3 crypto_price_extractor.py
