@@ -43,7 +43,8 @@ def init_system_database():
             timestamp INTEGER,
             keyword_targeted TEXT,
             output_file TEXT,
-            status TEXT
+            status TEXT,
+            source TEXT DEFAULT 'test'
         )
     """)
     conn.commit()
@@ -64,18 +65,18 @@ def log_system_event(event_type, message):
     except Exception as e:
         print(f"⚠️ Internal Ledger Logging Failure: {e}")
 
-def log_successful_ad(keyword, file_generated):
+def log_successful_ad(keyword, file_generated, source='test'):
     """Writes a secure transaction entry logging your promotional activities."""
     try:
         conn = sqlite3.connect('corporate_ledger.db')
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO marketing_ledger (timestamp, keyword_targeted, output_file, status) VALUES (?, ?, ?, ?)",
-            (int(time.time()), keyword, file_generated, "SUCCESS_COMPILED")
+            "INSERT INTO marketing_ledger (timestamp, keyword_targeted, output_file, status, source) VALUES (?, ?, ?, ?, ?)",
+            (int(time.time()), keyword, file_generated, "SUCCESS_COMPILED", source)
         )
         conn.commit()
         conn.close()
-        print(f"📈 Marketing Ledger Verified: Logged success for #{keyword}")
+        print(f"📈 Marketing Ledger Verified: Logged success for #{keyword} (source: {source})")
     except Exception as e:
         print(f"⚠️ Marketing Database Writing Error: {e}")
 
@@ -85,7 +86,6 @@ def check_sol_balance_via_raw_rpc():
         print("⚠️ Environment Warning: HELIUS_API_KEY variable is missing. Running on local system fallback metrics.")
         return 0.005790406
     try:
-        # --- FIX: Corrected Helius RPC endpoint ---
         url = f"https://mainnet.helius-rpc.com/?api-key={HELIUS_TOKEN}"
         headers = {"Content-Type": "application/json"}
         payload = json.dumps({
@@ -129,7 +129,7 @@ def run_automated_marketing_cycle():
     sample_metrics = "* Verified high-density cloud pipeline indexing configurations.\n* Performance tracking node stabilized."
     for term in target_terms:
         output_path = seo_optimization_bot.create_seo_markdown_page(term, sample_metrics)
-        log_successful_ad(term, output_path)
+        log_successful_ad(term, output_path, source='seo_bot')
 
 def generate_web_dashboard():
     """Reads your local corporate_ledger.db files and compiles a skinned HTML interface layout."""
@@ -155,7 +155,7 @@ def generate_web_dashboard():
         cursor = conn.cursor()
         cursor.execute("SELECT id, timestamp, event_type, message FROM system_logs ORDER BY id DESC LIMIT 10")
         system_rows = cursor.fetchall()
-        cursor.execute("SELECT id, timestamp, keyword_targeted, output_file, status FROM marketing_ledger ORDER BY id DESC")
+        cursor.execute("SELECT id, timestamp, keyword_targeted, output_file, status, source FROM marketing_ledger ORDER BY id DESC")
         marketing_rows = cursor.fetchall()
         conn.close()
         sys_logs_html = ""
@@ -165,9 +165,9 @@ def generate_web_dashboard():
             sys_logs_html += f"<tr><td>{row_id}</td><td>{time_str}</td><td><span class='badge'>{event_type}</span></td><td>{message}</td></tr>"
         mkt_logs_html = ""
         for row in marketing_rows:
-            row_id, timestamp, keyword, output_file, status = row
+            row_id, timestamp, keyword, output_file, status, source = row
             time_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(timestamp)))
-            mkt_logs_html += f"<tr><td>{row_id}</td><td>{time_str}</td><td>#{keyword}</td><td><code>{output_file}</code></td><td><span class='badge'>{status}</span></td></tr>"
+            mkt_logs_html += f"<tr><td>{row_id}</td><td>{time_str}</td><td>#{keyword}</td><td><code>{output_file}</code></td><td><span class='badge'>{status}</span></td><td>{source}</td></tr>"
         html_template = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -202,7 +202,6 @@ def generate_web_dashboard():
     except Exception as e:
         print(f"❌ Dashboard skinning compilation aborted: {e}")
 
-# --- FIX: Disabled deprecated Google sitemap ping ---
 def ping_google_search_indexers(target_slug):
     """Pings open search sitemap engine gateways (DEPRECATED - DISABLED)."""
     print(f"🌐 Google sitemap ping is deprecated. Skipping ping for: {target_slug}")
@@ -230,7 +229,6 @@ def push_telegram_sales_alert(amount_sol, customer_email):
 <i>✅ System Node Status: 100% Operational</i>
 """
     try:
-        # --- FIX: Correct Telegram API URL ---
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         payload = json.dumps({
             "chat_id": str(TELEGRAM_CHAT_ID),
@@ -269,18 +267,12 @@ def main():
 
     generate_web_dashboard()
 
-    # --- FIX: Disabled deprecated Google ping ---
-    # ping_google_search_indexers("solanaengine")
-    print("🌐 Google sitemap ping is deprecated. Skipping.")
+    ping_google_search_indexers("solanaengine")
 
     push_telegram_sales_alert(0.01, parsed_customer_email)
 
     print("📣 Spawning Marketing Bot broadcast engine...")
     subprocess.run(["python3", "marketing_bot.py"])
-
-    # Insert this line right after step 9 (marketing_bot.py) inside your main() execution layout:
-    print("🧹 Triggering static file folder matrix cleanup pipeline...")
-    subprocess.run(["python3", "cleanup_old_posts.py"])
 
     log_system_event("DAEMON_SHUTDOWN", "Execution successful. Cloud runner cycle completed clean.")
     print("✅ Execution successful. Cloud runner closing down to save minutes.\n")

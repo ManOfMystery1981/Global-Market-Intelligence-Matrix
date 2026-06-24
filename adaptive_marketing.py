@@ -13,11 +13,11 @@ def get_top_performing_keywords():
         conn = sqlite3.connect('corporate_ledger.db')
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT keyword_targeted, COUNT(*) FROM marketing_ledger WHERE status = 'SUCCESS_COMPILED' GROUP BY keyword_targeted ORDER BY COUNT(*) DESC LIMIT 3"
+            "SELECT keyword_targeted, COUNT(*) FROM marketing_ledger WHERE status = 'SALE' GROUP BY keyword_targeted ORDER BY COUNT(*) DESC LIMIT 3"
         )
         results = cursor.fetchall()
         conn.close()
-        return [row[0] for row in results]
+        return [row[0] for row in results] if results else ["SolanaEngine", "DataArbitrage", "MultiAgentSys"]
     except Exception as e:
         print(f"⚠️ Keyword query failed: {e}")
         return ["SolanaEngine", "DataArbitrage", "MultiAgentSys"]
@@ -27,12 +27,6 @@ def adjust_marketing():
     top_keywords = get_top_performing_keywords()
     print(f"📊 Top performing keywords: {top_keywords}")
     
-    # You can extend this to:
-    # - Update seo_optimization_bot.py with new keywords
-    # - Adjust marketing_bot.py frequency
-    # - Trigger new SEO page generation
-    
-    # For now, log the adjustment
     try:
         conn = sqlite3.connect('corporate_ledger.db')
         cursor = conn.cursor()

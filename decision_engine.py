@@ -82,13 +82,13 @@ def check_wallet_balance():
     return 0.005790406
 
 def check_recent_sales(days=7):
-    """Count sales in the last N days from marketing_ledger."""
+    """Count only real sales (source = 'webhook' or status = 'SALE')."""
     try:
         conn = sqlite3.connect('corporate_ledger.db')
         cursor = conn.cursor()
         cutoff = int(time.time()) - (days * 86400)
         cursor.execute(
-            "SELECT COUNT(*) FROM marketing_ledger WHERE timestamp > ? AND status = 'SUCCESS_COMPILED'",
+            "SELECT COUNT(*) FROM marketing_ledger WHERE timestamp > ? AND (status = 'SALE' OR source = 'webhook')",
             (cutoff,)
         )
         count = cursor.fetchone()[0]
@@ -138,17 +138,15 @@ def make_decisions():
         msg = f"⚠️ Low balance: {balance} SOL. Pausing non-essential bots."
         log_decision("LOW_BALANCE", msg)
         send_telegram_alert(msg)
-        # Pause marketing bot to save resources
-        # subprocess.run(["python3", "pause_bots.py"])
+        subprocess.run(["python3", "pause_bots.py"])
 
-    # --- 2. Check sales performance ---
+    # --- 2. Check sales performance (now accurate) ---
     sales = check_recent_sales(7)
-    print(f"📊 Sales in last 7 days: {sales}")
+    print(f"📊 Real sales in last 7 days: {sales}")
     if sales < 2:
         msg = f"⚠️ Low sales: {sales} in 7 days. Adjusting marketing."
         log_decision("LOW_SALES", msg)
         send_telegram_alert(msg)
-        # Trigger marketing adjustment
         subprocess.run(["python3", "adaptive_marketing.py"])
 
     # --- 3. Check webhook health ---
@@ -191,12 +189,8 @@ def make_decisions():
             send_telegram_alert(msg)
             subprocess.run(["python3", "seo_optimization_bot.py"])
 
-    # --- 7. Check if bots are running (via process list) ---
-    # This is a placeholder — you can implement process checking later.
-
     log_decision("CYCLE_END", "Decision engine cycle completed.")
     print("🧠 Decision engine cycle completed.\n")
 
-# --- Main ---
 if __name__ == "__main__":
     make_decisions()
