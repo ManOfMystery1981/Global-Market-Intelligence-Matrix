@@ -1,0 +1,28 @@
+{
+    "terminal.integrated.env.linux": {
+        "TELEGRAM_BOT_TOKEN": "8736368782:AAGDt398paOLnHHCDNtJAJFk6bx0moJtm84",
+        "TELEGRAM_CHAT_ID": "8794514690",
+        "HELIUS_API_KEY": "",
+        "FALLBACK_EMAIL_USER": "dsull1981@gmail.com",
+        "FALLBACK_EMAIL_PASS": ""
+    },
+    "workbench.editor.layout": {
+        "orientation": 0,
+        "groups": [
+            { "groups": [{}, {}], "orientation": 1 },
+            { "groups": [{}], "orientation": 1 }
+        ]
+    },
+    "files.exclude": {
+        "**/.git": true,
+        "**/.DS_Store": true,
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "backups/": false
+    },
+    "terminal.integrated.fontSize": 13,
+    "editor.fontSize": 14,
+    "editor.fontFamily": "'Fira Code', 'Courier New', monospace",
+    "editor.fontLigatures": true,
+    "editor.minimap.enabled": false
+}
