@@ -1,3 +1,5 @@
+# Overwrite the file with the corrected version
+cat > index.html << 'EOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -293,7 +295,7 @@
             drawer.classList.toggle("active");
         }
 
-        // --- NEW: Handle Checkout with Email ---
+        // --- Handle Checkout with Email ---
         function handleCheckout(event) {
             event.preventDefault();
             playInterfaceClickSound();
@@ -308,26 +310,17 @@
                 return;
             }
 
-            // Base MoonPay URL from your Hel.io link
             const baseUrl = 'https://moonpay.hel.io/pay/6a3bc83d9bd316f8a076ffe2';
-            
-            // Append the email as a query parameter
             const checkoutUrl = baseUrl + '?customerEmail=' + encodeURIComponent(email);
-
-            // Open MoonPay in a new tab
             window.open(checkoutUrl, '_blank');
 
             statusBadge.style.color = '#00ff66';
             statusBadge.innerText = '✅ MoonPay opened. Complete your payment.';
-
-            // Store email for reference
             window._customerEmail = email;
         }
 
-        // Add click sound to all interactive elements
         document.querySelectorAll('a, button, .moonpay-anchor').forEach(function(element) {
             element.addEventListener('click', function(e) {
-                // Don't double-trigger for the MoonPay button
                 if (element.id !== 'moonpayButton') {
                     playInterfaceClickSound();
                 }
@@ -337,3 +330,4 @@
 
 </body>
 </html>
+EOF
