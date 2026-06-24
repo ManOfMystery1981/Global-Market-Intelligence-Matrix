@@ -43,6 +43,7 @@
             padding: 10px 0;
             display: block;
             border-bottom: 1px solid #161b22;
+            transition: color 0.2s;
         }
         .sidebar a:hover {
             color: #00ff66;
@@ -123,6 +124,11 @@
             font-weight: 900;
             font-size: 16px;
             box-shadow: 0 0 25px rgba(0, 255, 102, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .moonpay-anchor:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 35px rgba(0, 255, 102, 0.5);
         }
         .crypto-tag {
             background-color: #2563eb;
@@ -146,6 +152,11 @@
             font-family: inherit;
             font-size: 13px;
             font-weight: bold;
+            transition: background 0.2s, color 0.2s;
+        }
+        .donation-trigger:hover {
+            background: #00ff6611;
+            color: #00ff66;
         }
         .donation-drawer {
             display: none;
@@ -175,12 +186,21 @@
 </head>
 <body>
 
+    <!-- Left Sidebar with Corrected Links and Sample Report -->
     <nav class="sidebar" aria-label="System Reports Matrix">
         <h3>📊 System Feeds</h3>
-        <a href="https://github.com" target="_blank">📡 Multi Agent System Feed</a>
-        <a href="https://github.com" target="_blank">📈 Website Traffic Analytics</a>
+        <a href="https://github.com/ManOfMystery1981/global-software-trends/actions/workflows/cron_tracker.yml" target="_blank">
+            📡 Multi-Agent System Feed
+        </a>
+        <a href="#" target="_blank">📈 Website Traffic Analytics</a>
+        
         <h3>📝 Product Info</h3>
-        <a href="http://github.io" target="_blank">📋 View Sample Market Report</a>
+        <!-- Sample Report link with mouseover tooltip -->
+        <a href="https://github.com/ManOfMystery1981/global-software-trends/blob/main/samplereport.md" 
+           target="_blank" 
+           title="View a sample market intelligence report">
+            📋 Sample Report
+        </a>
     </nav>
 
     <main class="main-content">
