@@ -1,4 +1,4 @@
-# global-software-trends
+# global-software-trends by: Global Market Intelligence Matrix - Data Analytics
 # 📊 Autonomous Market Intelligence – Data Arbitrage Service
 
 This repository contains the code for an automated **Data Analytics Service** that specializes in **Data Arbitrage**. The service combs the web to identify the latest global software trends and compiles them into a comprehensive report, which users can purchase for **0.01 Solana (SOL)**.
