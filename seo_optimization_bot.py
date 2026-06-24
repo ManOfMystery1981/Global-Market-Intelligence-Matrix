@@ -1,3 +1,4 @@
+import crypto_price_extractor
 import os
 import re
 
