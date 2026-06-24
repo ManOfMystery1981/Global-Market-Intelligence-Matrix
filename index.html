@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Google Search Console Verification Meta Tag Safely Restored -->
     <meta name="google-site-verification" content="verification-download?resource_id=https:%2F%2Fmanofmystery1981.github.io%2Fglobal-software-trends%2F" />
-    <title>Global Market Intelligence Matrix</title>
+    <title>Autonomous Market Intelligence Matrix</title>
     <style>
         * { box-sizing: border-box; }
         body { 
@@ -18,9 +18,9 @@
             min-height: 100vh;
         }
         
-        /* Sleek Cyberpunk Side Panel Layout Blueprint Component */
+        /* Sleek Left Sidebar Navigation Panel Matrix Layout */
         .sidebar {
-            width: 300px;
+            width: 320px;
             background-color: #0d131f;
             border-right: 2px solid #00ff6633;
             padding: 40px 25px;
@@ -50,7 +50,6 @@
         .sidebar a:hover {
             color: #00ff66;
             text-decoration: underline;
-            border-bottom: 1px solid #00ff6633;
         }
         
         /* Master Main Centered Workspace Canvas Viewport Layout */
@@ -65,99 +64,187 @@
         .matrix-container { 
             max-width: 650px; 
             width: 100%;
-            border: 2px solid #00ff66; 
+            border: 1px solid #1e293b; 
             padding: 45px; 
             background: #0f172a; 
             text-align: center;
-            border-radius: 8px;
-            box-shadow: 0 0 35px rgba(0, 255, 102, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
-        h1 { 
-            color: #ffffff; 
-            margin-top: 0; 
-            font-size: 24px; 
-            text-transform: uppercase; 
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(0, 255, 102, 0.3);
-        }
-        p { color: #94a3b8; line-height: 1.7; font-size: 14px; margin-bottom: 30px; }
         
-        /* Premium Core MoonPay Action Button Interface Style Matrix */
-        .moonpay-btn { 
-            display: inline-block;
-            background: linear-gradient(135deg, #00ff66 0%, #00bfff 100%);
-            color: #000000; 
-            padding: 16px 36px; 
-            font-weight: 900; 
-            border-radius: 6px; 
-            font-size: 15px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
+        .header-title {
+            color: #00ff66;
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .description-text { color: #94a3b8; line-height: 1.6; font-size: 14px; margin-bottom: 30px; text-align: center; }
+        
+        /* Meta Grid Layout Container Metrics Sheet */
+        .metrics-box {
+            background-color: #020617;
+            border-left: 4px solid #a855f7;
+            padding: 20px;
+            text-align: left;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }
+        .metrics-box div { font-size: 13px; margin: 8px 0; color: #ffffff; }
+        .metrics-box div span { color: #94a3b8; }
+        
+        /* Email Input Target UI Element */
+        .email-input {
+            width: 100%;
+            background-color: #020617;
+            border: 1px solid #1e293b;
+            color: #ffffff;
+            padding: 14px;
+            border-radius: 6px;
+            font-family: inherit;
+            text-align: center;
+            font-size: 14px;
+            margin-bottom: 25px;
+            outline: none;
+        }
+        .email-input:focus { border-color: #00ff6633; }
+        
+        /* Premium Functional Hel.io / MoonPay Action Button Interface */
+        .moonpay-anchor {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #00ff66;
+            color: #000000;
             text-decoration: none;
-            box-shadow: 0 6px 20px rgba(0, 255, 102, 0.3);
-            border: none;
-            cursor: pointer;
+            padding: 14px 28px;
+            border-radius: 30px;
+            font-weight: 900;
+            font-size: 16px;
+            box-shadow: 0 0 25px rgba(0, 255, 102, 0.3);
             transition: transform 0.2s, box-shadow 0.2s;
         }
-        .moonpay-btn:hover {
+        .moonpay-anchor:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 191, 255, 0.4);
+            box-shadow: 0 0 35px rgba(0, 255, 102, 0.45);
         }
-        
-        /* Core Standby Checkout Status Notification Layout */
-        .status-badge {
-            margin-top: 20px;
+        .crypto-tag {
+            background-color: #2563eb;
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 11px;
-            color: #00ff66;
+            font-weight: bold;
             letter-spacing: 1px;
-            text-transform: uppercase;
         }
         
-        /* Central Donation Anchor Suffix Element Block */
-        .donation-link {
+        .status-badge { color: #00ff6688; font-size: 12px; margin-top: 25px; letter-spacing: 0.5px; }
+        
+        /* Interactive Donations Drawer Component Layout */
+        .donation-trigger {
             display: inline-block;
-            margin-top: 35px;
-            color: #ff007f;
-            text-decoration: none;
-            font-size: 14px;
+            margin-top: 30px;
+            background: none;
+            border: 1px solid #00ff6633;
+            color: #00ff66bb;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13px;
             font-weight: bold;
-            text-shadow: 0 0 8px rgba(255, 0, 127, 0.2);
+            transition: background 0.2s;
         }
-        .donation-link:hover {
-            text-decoration: underline;
-            color: #ff3399;
+        .donation-trigger:hover { background-color: #00ff6611; color: #00ff66; }
+        
+        .donation-drawer {
+            display: none;
+            background-color: #020617;
+            border: 1px solid #ef444433;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: left;
+            color: #e2e8f0;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .donation-drawer.active { display: block; }
+        .wallet-string {
+            background-color: #0f172a;
+            padding: 8px;
+            border-radius: 4px;
+            display: block;
+            word-break: break-all;
+            margin-top: 8px;
+            color: #00bfff;
+            font-size: 12px;
+            border: 1px dashed #00bfff44;
         }
     </style>
 </head>
 <body>
 
-    <!-- Task Content: Left Side Navigation Reports Panel Layout Matrix Components View -->
+    <!-- Left Side Navigation Reports Panel Layout Grid Matrix Components View -->
     <nav class="sidebar" aria-label="System Reports Matrix">
         <h3>📊 System Reports</h3>
-        <a href="http://github.com" target="_blank">📈 Performance Dashboard</a>
-        <a href="http://github.com" target="_blank">📡 Solana Engine Feed</a>
-        <a href="http://github.com" target="_blank">📡 Data Arbitrage Feed</a>
+        <a href="http://github.io" target="_blank">📈 Performance Dashboard</a>
+        <a href="http://github.io" target="_blank">📡 Solana Engine Feed (.md)</a>
+        <a href="http://github.io" target="_blank">📡 Data Arbitrage Feed (.md)</a>
+        <a href="http://github.io" target="_blank">📡 Multi-Agent System Feed (.md)</a>
     </nav>
 
-    <!-- Main Workspace View (Premium Cyberpunk Storefront Skin with MoonPay Purchase Pipeline) -->
+    <!-- Main Workspace View (Premium Storefront Skin with Live Hel.io Routing) -->
     <main class="main-content">
         <div class="matrix-container">
-            <h1>📊 Autonomous Market Intelligence Matrix</h1>
-            <p>Unlock real-time data-arbitrage compiling across the top trending global software structures.</p>
-            <p style="color: #ffffff; font-weight: bold;">⚡ Cost: 0.01 SOL (~$1.50) | 📦 Delivery: Instant Automated Secure Email Splitter</p>
-            
-            <!-- Restored Premium Functional Checkout Core Matrix Button Link Block -->
-            <div class="checkout-wrapper">
-                <a class="moonpay-btn" href="https://moonpay.com" target="_blank">💳 Instant Purchase Via MoonPay</a>
-                <div class="status-badge">// Sovereign Checkout System Standby. Ready. //</div>
+            <div class="header-title">
+                📊 Autonomous Market Intelligence
+            </div>
+            <div class="description-text">
+                Unlock real-time data-arbitrage data compiling the top trending global software structures, system metrics, and dependency metrics directly on-chain.
             </div>
             
-            <!-- Restored Operational Support / Donations Anchor Component Matrix Layout -->
-            <div>
-                <a class="donation-link" href="http://github.com" target="_blank">❤️ Support Operations / Donations</a>
+            <div class="metrics-box">
+                <div>⚡ <span>Cost:</span> 0.01 SOL (~$1.50)</div>
+                <div>📦 <span>Delivery:</span> Instant automated email</div>
+                <div>🔒 <span>Network:</span> Sovereign Web3 Infrastructure</div>
+            </div>
+            
+            <input type="email" class="email-input" placeholder="Enter your target delivery email" aria-label="Target delivery email">
+            
+            <!-- Restored True Functional Hel.io / MoonPay Checkout Route Core Button link -->
+            <div class="checkout-wrapper">
+                <a class="moonpay-anchor" href="https://moonpay.hel.io/pay/6a3bc83d9bd316f8a076ffe2" target="_blank">
+                    <span>💳 Pay with MoonPay</span>
+                    <span class="crypto-tag">CRYPTO ACCEPTED</span>
+                </a>
+                <div class="status-badge">Sovereign Checkout System Standby. Ready.</div>
+            </div>
+            
+            <!-- Restored Interactive Operational Support / Donations Matrix Drawer Layout -->
+            <button class="donation-trigger" onclick="toggleDonationDrawer()">❤️ Donations Accepted!</button>
+            
+            <div id="donationDrawer" class="donation-drawer">
+                <strong>❤️ Donations Accepted!</strong><br/>
+                This project is maintained by independent developers. Your support helps keep it running.<br/><br/>
+                1. Open your Solana wallet app.<br/>
+                2. Send any amount of SOL you wish to donate to:<br/>
+                <span class="wallet-string">3rLapKiA4SfTQMMMFfkZSfkT12iFXQPiKv7w9mzqKZqh</span><br/><br/>
+                🙏 Thank you for your generosity! Every bit helps.
             </div>
         </div>
     </main>
+
+    <script>
+        function toggleDonationDrawer() {
+            var drawer = document.getElementById("donationDrawer");
+            drawer.classList.toggle("active");
+        }
+    </script>
 
 </body>
 </html>
