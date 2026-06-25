@@ -3,21 +3,11 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Autonomous Market Intelligence - Data Arbitrage Service",
-  "main": "index.js",
+  "main": "index.html",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [
-    "solana",
-    "web3",
-    "data",
-    "analytics"
-  ],
+  "keywords": ["solana", "web3", "data", "analytics"],
   "author": "ManOfMystery1981",
-  "license": "MIT",
-  "dependencies": {
-    "@sparticuz/chromium": "^149.0.0",
-    "puppeteer-core": "^25.2.1"
-  }
+  "license": "MIT"
 }

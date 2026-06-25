@@ -1,5 +1,7 @@
 {
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
+  "functions": {
+    "api/verify-and-fulfill.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
 }
