@@ -67,19 +67,14 @@ jobs:
         run: |
           python llm_analyst_bot.py
 
-- name: Generate Full Report
-  env:
-    RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-    CUSTOMER_EMAIL: ${{ github.event.inputs.email || '' }}
-    TEST_MODE: ${{ github.event.inputs.test_mode || 'false' }}
-  run: |
-    if [ -n "$CUSTOMER_EMAIL" ] || [ "$SEND_TEST_COPY" == "true" ]; then
-      echo "📧 Generating and sending report..."
-      python generate_full_report.py $CUSTOMER_EMAIL
-    else
-      echo "⚠️ No email provided. Running report generation without email..."
-      python generate_full_report.py
-    fi
+      - name: Generate Full Report
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          CUSTOMER_EMAIL: ${{ github.event.inputs.email || '' }}
+          TEST_MODE: ${{ github.event.inputs.test_mode || 'false' }}
+          SEND_TEST_COPY: ${{ github.event.inputs.send_test_copy || 'false' }}
+        run: |
+          EMAIL_TO_SEND="$CUSTOMER_EMAIL"
           
           # If send_test_copy is enabled, send to dsull1981@gmail.com
           if [ "$SEND_TEST_COPY" == "true" ]; then
@@ -88,10 +83,11 @@ jobs:
           fi
           
           if [ -n "$EMAIL_TO_SEND" ]; then
-            echo "📧 Sending report to: $EMAIL_TO_SEND"
-            python delivery_bot.py $EMAIL_TO_SEND $([ "$TEST_MODE" == "true" ] && echo "--test")
+            echo "📧 Generating report and sending to: $EMAIL_TO_SEND"
+            python generate_full_report.py $EMAIL_TO_SEND
           else
-            echo "⚠️ No email provided. Skipping email delivery. Report available as artifact."
+            echo "⚠️ No email provided. Running report generation without email..."
+            python generate_full_report.py
           fi
 
       - name: Upload Artifacts
@@ -103,4 +99,3 @@ jobs:
             Global_Software_Trends_Report.pdf
             market_intelligence.md
           retention-days: 30
-
