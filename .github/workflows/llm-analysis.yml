@@ -19,7 +19,7 @@ on:
           - 'false'
           - 'true'
       send_test_copy:
-        description: 'Send a test copy to dsull1981@gmail.com (for testing only)'
+        description: 'Send a test copy to dsull1981@gmail.com'
         required: false
         default: 'false'
         type: choice
@@ -74,6 +74,10 @@ jobs:
           TEST_MODE: ${{ github.event.inputs.test_mode || 'false' }}
           SEND_TEST_COPY: ${{ github.event.inputs.send_test_copy || 'false' }}
         run: |
+          echo "📧 CUSTOMER_EMAIL: '$CUSTOMER_EMAIL'"
+          echo "🧪 SEND_TEST_COPY: '$SEND_TEST_COPY'"
+          echo "🧪 TEST_MODE: '$TEST_MODE'"
+          
           EMAIL_TO_SEND="$CUSTOMER_EMAIL"
           
           # If send_test_copy is enabled, send to dsull1981@gmail.com
