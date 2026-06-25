@@ -41,6 +41,10 @@ jobs:
 
       - name: Install Ollama
         run: |
+          # Kill any existing Ollama processes (prevents port conflicts)
+          pkill -f ollama || true
+          sleep 2
+          
           # Download and install Ollama using the official script
           curl -fsSL https://ollama.com/install.sh | sh
           
