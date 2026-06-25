@@ -41,10 +41,10 @@ jobs:
 
       - name: Install Ollama
         run: |
-          # Download and install Ollama
+          # Download and install Ollama using the official script
           curl -fsSL https://ollama.com/install.sh | sh
           
-          # Start Ollama server in background
+          # Start Ollama server in the background
           ollama serve &
           
           # Wait for Ollama to be ready
@@ -53,7 +53,7 @@ jobs:
           # Pull the model
           ollama pull qwen2:0.5b
           
-          # Verify installation
+          # Verify the installation
           ollama list
 
       - name: Run LLM Analyst Bot
