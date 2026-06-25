@@ -67,18 +67,19 @@ jobs:
         run: |
           python llm_analyst_bot.py
 
-      - name: Generate Full PDF Report
-        env:
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          CUSTOMER_EMAIL: ${{ github.event.inputs.email || '' }}
-          TEST_MODE: ${{ github.event.inputs.test_mode || 'false' }}
-          SEND_TEST_COPY: ${{ github.event.inputs.send_test_copy || 'false' }}
-        run: |
-          echo "📧 CUSTOMER_EMAIL: '$CUSTOMER_EMAIL'"
-          echo "🧪 SEND_TEST_COPY: '$SEND_TEST_COPY'"
-          echo "🧪 TEST_MODE: '$TEST_MODE'"
-          
-          EMAIL_TO_SEND="$CUSTOMER_EMAIL"
+- name: Generate Full Report
+  env:
+    RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+    CUSTOMER_EMAIL: ${{ github.event.inputs.email || '' }}
+    TEST_MODE: ${{ github.event.inputs.test_mode || 'false' }}
+  run: |
+    if [ -n "$CUSTOMER_EMAIL" ] || [ "$SEND_TEST_COPY" == "true" ]; then
+      echo "📧 Generating and sending report..."
+      python generate_full_report.py $CUSTOMER_EMAIL
+    else
+      echo "⚠️ No email provided. Running report generation without email..."
+      python generate_full_report.py
+    fi
           
           # If send_test_copy is enabled, send to dsull1981@gmail.com
           if [ "$SEND_TEST_COPY" == "true" ]; then
@@ -102,3 +103,4 @@ jobs:
             Global_Software_Trends_Report.pdf
             market_intelligence.md
           retention-days: 30
+
