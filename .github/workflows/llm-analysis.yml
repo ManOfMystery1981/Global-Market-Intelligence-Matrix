@@ -1,4 +1,4 @@
-# .github/workflows/llm-analysis.yml
+# .github/workflows/llm-analysis.yml - Updated with larger model
 name: LLM Tech Analyst - Automated Report Generation
 
 on:
@@ -30,7 +30,7 @@ on:
 jobs:
   generate-analysis:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45  # Increased for larger model
 
     steps:
       - name: Checkout Repository
@@ -54,7 +54,8 @@ jobs:
           curl -fsSL https://ollama.com/install.sh | sh
           ollama serve &
           sleep 10
-          ollama pull tinyllama:latest
+          # Use Mistral 7B for better quality and longer context
+          ollama pull mistral:7b-instruct-q4_0
           ollama list
 
       - name: Run LLM Analyst Bot
@@ -63,7 +64,7 @@ jobs:
           CUSTOMER_EMAIL: ${{ github.event.inputs.email || '' }}
           TEST_MODE: ${{ github.event.inputs.test_mode || 'false' }}
           LLM_API_URL: "http://localhost:11434/api/generate"
-          LLM_MODEL: "tinyllama:latest"
+          LLM_MODEL: "mistral:7b-instruct-q4_0"
         run: |
           python llm_analyst_bot.py
 
@@ -76,7 +77,6 @@ jobs:
         run: |
           EMAIL_TO_SEND="$CUSTOMER_EMAIL"
           
-          # If send_test_copy is enabled, send to dsull1981@gmail.com
           if [ "$SEND_TEST_COPY" == "true" ]; then
             EMAIL_TO_SEND="dsull1981@gmail.com"
             echo "🧪 Test copy enabled: Sending to $EMAIL_TO_SEND"

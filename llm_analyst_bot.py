@@ -1,4 +1,4 @@
-# llm_analyst_bot.py
+# llm_analyst_bot.py - Section-by-section generation
 import os
 import json
 import requests
@@ -9,90 +9,53 @@ from delivery_bot import get_latest_data
 from data_collector_bot import MarketDataCollector
 from os_data_collector import OSDataCollector
 from company_data_collector import TechCompanyDataCollector
-from llm_analyst_prompt import generate_analyst_prompt
+from llm_analyst_prompt import generate_section_prompt
 
 class LLMAnalystBot:
-    """Bot that sends report data to a local LLM (Ollama) and retrieves the analyst article."""
+    """Bot that generates reports section by section."""
     
     def __init__(self):
         self.llm_url = os.environ.get("LLM_API_URL", "http://localhost:11434/api/generate")
-        # Use a smaller, faster model for CPU
-        self.model = os.environ.get("LLM_MODEL", "tinyllama:latest")
+        self.model = os.environ.get("LLM_MODEL", "mistral:7b-instruct-q4_0")
+        self.max_tokens = 2048  # Increased for longer sections
         
-    def wake_llm(self, prompt):
-        """Send the prompt to Ollama and get the response with extended timeout."""
+    def generate_section(self, prompt, section_name):
+        """Generate a single section of the report."""
         payload = {
             "model": self.model,
             "prompt": prompt,
             "stream": False,
             "temperature": 0.5,
-            "max_tokens": 1500,
-            "system": "You are a Senior Technology Analyst with expertise in software development, financial markets, and technology forecasting."
+            "max_tokens": self.max_tokens,
+            "system": "You are a Senior Technology Journalist. Write professionally and thoroughly."
         }
         
         try:
-            print(f"🤖 Waking up LLM using {self.model}...")
-            print(f"⏳ This may take up to 5 minutes on CPU...")
-            
-            # Increased timeout to 300 seconds (5 minutes)
-            response = requests.post(self.llm_url, json=payload, timeout=300)
+            print(f"📝 Generating section: {section_name}...")
+            response = requests.post(self.llm_url, json=payload, timeout=180)
             
             if response.status_code == 200:
                 data = response.json()
-                article = data.get("response", "")
-                if article:
-                    print(f"✅ LLM analysis complete ({len(article)} characters).")
-                    return article
+                content = data.get("response", "")
+                if content:
+                    print(f"✅ {section_name} complete ({len(content)} characters).")
+                    return content
                 else:
-                    print("⚠️ LLM returned empty response")
-                    return self._generate_fallback_article()
+                    print(f"⚠️ Empty response for {section_name}")
+                    return f"## {section_name}\n\nNo data available for this section."
             else:
-                print(f"❌ LLM error: {response.status_code}")
-                return self._generate_fallback_article()
-        except requests.exceptions.Timeout:
-            print("❌ LLM timeout - the model took too long to respond.")
-            print("💡 Try using a smaller model like 'tinyllama:latest'")
-            return self._generate_fallback_article()
+                print(f"❌ LLM error for {section_name}: {response.status_code}")
+                return f"## {section_name}\n\nError generating this section."
         except Exception as e:
-            print(f"❌ LLM error: {e}")
-            return self._generate_fallback_article()
-    
-    def _generate_fallback_article(self):
-        """Generate a fallback article if the LLM is unavailable."""
-        return """
-## Executive Summary
-
-The technology sector is undergoing a historic transformation driven by artificial intelligence. Nvidia has emerged as the dominant force with a $4.2 trillion market cap, while Amazon, Apple, and Microsoft continue to lead by revenue. The AI boom has added over $30 trillion in shareholder value, reshaping the competitive landscape.
-
-## 1. Software Trends Deep Dive
-
-AI/ML adoption continues to accelerate across enterprise sectors, with Rust and TypeScript gaining significant traction. Kubernetes remains the dominant cloud orchestration platform, while edge computing frameworks see 40% growth.
-
-## 2. Tech Company Landscape
-
-The top tech companies are now defined by their AI capabilities. Nvidia leads with 85% revenue growth, while Microsoft and Alphabet are investing heavily in AI infrastructure. Amazon's cloud business continues to drive its dominance.
-
-## 3. AI Revolution Impact
-
-AI is the single most important force reshaping the industry. Companies that embrace AI are seeing significant market rewards, while those that lag risk being disrupted.
-
-## 4. Strategic Recommendations
-
-**For CTOs:** Prioritize AI integration and cloud-native architecture. Invest in developer productivity tools and modern languages.
-
-**For Developers:** Focus on AI/ML, Rust, and cloud-native skills. Build expertise in emerging technologies.
-
-**For Founders:** Look for opportunities in AI tooling, developer productivity, and edge computing.
-
-**For Recruiters:** Target candidates with AI/ML and cloud-native skills.
-"""
+            print(f"❌ LLM error for {section_name}: {e}")
+            return f"## {section_name}\n\nError generating this section."
     
     def run_analysis(self):
-        """Main method to collect data, send to LLM, and return the article."""
+        """Main method to collect data and generate the report section by section."""
         print("🔵 Starting LLM Analyst Bot...")
         
         # Collect all data
-        print("📊 Gathering market data...")
+        print("📊 Gathering data...")
         data = get_latest_data()
         trend_data = data['trends']
         metrics_data = data['metrics']
@@ -111,20 +74,35 @@ AI is the single most important force reshaping the industry. Companies that emb
         company_collector = TechCompanyDataCollector()
         company_data = company_collector.collect_all_data()
         
-        # Generate the prompt
-        print("📝 Generating analyst prompt...")
-        prompt = generate_analyst_prompt(
-            trend_data, 
-            metrics_data, 
-            crypto_data, 
-            stock_data, 
-            os_data,
-            company_data
-        )
+        # Generate each section
+        sections = []
         
-        # Send to LLM
-        print("🤖 Sending to LLM...")
-        article = self.wake_llm(prompt)
+        # Section 1: Executive Summary
+        prompt1 = generate_section_prompt("executive_summary", trend_data, metrics_data, crypto_data, stock_data, os_data, company_data)
+        sections.append(self.generate_section(prompt1, "Executive Summary"))
+        
+        # Section 2: Top 100 Tech Companies
+        prompt2 = generate_section_prompt("top_100", trend_data, metrics_data, crypto_data, stock_data, os_data, company_data)
+        sections.append(self.generate_section(prompt2, "Top 100 Tech Companies"))
+        
+        # Section 3: Top 10 by Category
+        prompt3 = generate_section_prompt("top_10_categories", trend_data, metrics_data, crypto_data, stock_data, os_data, company_data)
+        sections.append(self.generate_section(prompt3, "Top 10 by Category"))
+        
+        # Section 4: Innovations & Fringe Tech
+        prompt4 = generate_section_prompt("innovations", trend_data, metrics_data, crypto_data, stock_data, os_data, company_data)
+        sections.append(self.generate_section(prompt4, "Software Innovations & Fringe Tech"))
+        
+        # Section 5: Processor Landscape & OS News
+        prompt5 = generate_section_prompt("processors_os", trend_data, metrics_data, crypto_data, stock_data, os_data, company_data)
+        sections.append(self.generate_section(prompt5, "Processor Landscape & OS News"))
+        
+        # Section 6: Market Projections & Future Outlook
+        prompt6 = generate_section_prompt("projections", trend_data, metrics_data, crypto_data, stock_data, os_data, company_data)
+        sections.append(self.generate_section(prompt6, "Market Projections & Future Outlook"))
+        
+        # Combine all sections
+        full_article = "\n\n".join(sections)
         
         # Save the article
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -133,10 +111,10 @@ AI is the single most important force reshaping the industry. Companies that emb
         with open(article_file, 'w') as f:
             f.write(f"# Tech Analyst Report\n\n")
             f.write(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}\n\n")
-            f.write(article)
+            f.write(full_article)
         
-        print(f"✅ Article saved to {article_file}")
-        return article
+        print(f"✅ Full article saved to {article_file}")
+        return full_article
 
 if __name__ == "__main__":
     bot = LLMAnalystBot()

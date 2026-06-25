@@ -1,257 +1,226 @@
-# llm_analyst_prompt.py - Complete version with all formatting functions
-import json
-from datetime import datetime
-
-def generate_analyst_prompt(trend_data, metrics_data, crypto_data, stock_data, os_data, company_data=None):
-    """Generate the complete prompt with all sections."""
+# llm_analyst_prompt.py - Section prompts
+def generate_section_prompt(section, trend_data, metrics_data, crypto_data, stock_data, os_data, company_data):
+    """Generate a prompt for a specific section."""
     
-    if company_data is None:
-        from company_data_collector import TechCompanyDataCollector
-        collector = TechCompanyDataCollector()
-        company_data = collector.collect_all_data()
+    # Common data formatting
+    trends_text = format_list(trend_data)
+    metrics_text = format_dict(metrics_data)
+    crypto_text = format_dict(crypto_data)
+    stock_text = format_dict(stock_data)
+    os_text = format_dict(os_data)
     
-    # Format all sections
     top_100_text = format_top_100(company_data.get('top_100', []))
-    top_10_by_category_text = format_top_10_by_category(company_data.get('top_10_by_category', {}))
-    innovations_text = format_top_10_innovations(company_data.get('top_10_innovations', []))
+    top_10_categories = format_top_10_categories(company_data.get('top_10_by_category', {}))
+    innovations_text = format_innovations(company_data.get('top_10_innovations', []))
     processors_text = format_processors(company_data.get('processor_manufacturers', []))
-    fringe_text = format_fringe_tech(company_data.get('fringe_tech', []))
+    fringe_text = format_fringe(company_data.get('fringe_tech', []))
     os_news_text = format_os_news(company_data.get('os_news', {}))
-    projections_text = format_market_projections(company_data.get('market_projections', {}))
+    projections_text = format_projections(company_data.get('market_projections', {}))
     
-    prompt = f"""You are a Senior Technology Journalist with 20 years of experience covering the tech industry. Write an exciting, data-driven article for a premium tech newsletter. Use ONLY the data provided below.
+    if section == "executive_summary":
+        return f"""You are a Senior Technology Journalist. Write an exciting Executive Summary for a tech industry report.
 
-## 📊 COMPLETE MARKET DATA
+**DATA:**
+- Trends: {trends_text}
+- Top Companies: {top_100_text[:500]}
+- Projections: {projections_text}
 
-### TOP 100 TECH COMPANIES (Ranked 1-100)
+**RULES:**
+- Write with excitement and energy
+- Highlight the biggest stories of 2026
+- Mention the top 3 companies by name
+- Keep it to 1-2 paragraphs
+
+**OUTPUT:** Write the Executive Summary in journalistic style with bold headings and clear takeaways.
+"""
+    
+    elif section == "top_100":
+        return f"""You are a Senior Technology Journalist. Write a detailed section on the Top 100 Tech Companies.
+
+**DATA:**
 {top_100_text}
 
-### TOP 10 BY CATEGORY
-{top_10_by_category_text}
+**RULES:**
+- Show the full ranked list (all 100 companies)
+- Highlight the top 10 with special attention
+- Use a clean, readable format
+- Include revenue, market cap, and YTD change
+- Use proper bullets (•) and formatting
 
-### TOP 10 SOFTWARE ENGINEERING INNOVATIONS
-{innovations_text}
+**OUTPUT:** Write the full section with clear formatting and professional presentation.
+"""
+    
+    elif section == "top_10_categories":
+        return f"""You are a Senior Technology Journalist. Write a section on the Top 10 Companies by Category.
 
-### PROCESSOR MANUFACTURERS (Including Intel, AMD, ARM, Russian/Chinese)
-{processors_text}
+**DATA:**
+{top_10_categories}
 
-### FRINGE TECH INNOVATIONS
-{fringe_text}
+**RULES:**
+- Show top 10 by revenue, growth, market cap, and innovation
+- Highlight key insights about each category
+- Use professional formatting
 
-### LATEST OS NEWS
-{os_news_text}
+**OUTPUT:** Write the section with clear categories and insights.
+"""
+    
+    elif section == "innovations":
+        return f"""You are a Senior Technology Journalist. Write a section on Software Innovations and Fringe Tech.
 
-### MARKET PROJECTIONS (2025-2035)
+**DATA:**
+- Top 10 Innovations: {innovations_text}
+- Fringe Tech: {fringe_text}
+
+**RULES:**
+- Be exciting and engaging
+- Highlight the most impactful innovations
+- Mention the Raspberry Pi supercomputer
+- Use proper formatting
+
+**OUTPUT:** Write the section with energy and insight.
+"""
+    
+    elif section == "processors_os":
+        return f"""You are a Senior Technology Journalist. Write a section on Processors and OS News.
+
+**DATA:**
+- Processors: {processors_text}
+- OS News: {os_news_text}
+
+**RULES:**
+- Cover Intel, AMD, ARM, RISC-V, Russian/Chinese
+- Include latest OS news for each major OS
+- Show market share and trends
+
+**OUTPUT:** Write the section with clear headings and bullet points.
+"""
+    
+    elif section == "projections":
+        return f"""You are a Senior Technology Journalist. Write a section on Market Projections to 2035.
+
+**DATA:**
 {projections_text}
 
-### TOP SOFTWARE TRENDS
-{format_trends(trend_data)}
+**RULES:**
+- Show projections for AI, semiconductor, and cloud markets
+- Include the year-by-year table
+- Highlight key milestones and trends
+- Be exciting about future possibilities
 
-### KEY METRICS
-{format_metrics(metrics_data)}
-
-### CRYPTO & STOCK DATA
-{format_crypto(crypto_data)}
-{format_stocks(stock_data)}
-
-## 📝 YOUR TASK
-
-Write an exciting, journalistic article with these sections:
-
-1. 🚀 The Big Picture - Executive summary of the tech landscape in 2026
-2. 🏆 Top 100 Tech Titans - Show the ranked list with highlights of the top 10
-3. 📊 Top 10 by Category - Show rankings by revenue, growth, market cap, innovation
-4. 💡 Top 10 Innovations - Software engineering breakthroughs
-5. 🔬 Processor Landscape - Intel, AMD, ARM, RISC-V, Russian/Chinese processors
-6. 🛠️ Fringe Tech - Raspberry Pi supercomputers, DIY projects, open source hardware
-7. 🖥️ OS News - Latest updates for Windows, macOS, Linux, ChromeOS, FreeBSD, Android, iOS
-8. 📈 Market Projections - AI, semiconductor, and cloud markets to 2035
-
-## 🎯 FORMATTING
-
-- Top 100: Show as a numbered list with revenue and market cap
-- Top 10 by Category: Show with sections
-- Exciting tone - Think "TechCrunch" meets "The Information"
-- Future-focused - Reference 2026 and 2027 as current years
-
-Begin your analysis now!"""
-    return prompt
-
+**OUTPUT:** Write the section with the table and analysis.
+"""
+    
+    else:
+        return "Write a general tech industry section."
 
 def format_top_100(companies):
-    """Format the top 100 companies with rankings and key metrics."""
+    """Format top 100 companies."""
     if not companies:
-        return "No company data available."
-    
+        return "No data available."
     lines = []
-    for company in companies[:100]:
-        rank = company.get('rank', 0)
-        name = company.get('name', 'Unknown')
-        revenue = company.get('revenue', 0)
-        profit = company.get('profit', 0)
-        market_cap = company.get('market_cap', 0)
-        ytd_change = company.get('ytd_change', 0)
-        industry = company.get('industry', 'Unknown')
-        
-        line = f"  #{rank}. {name} — Revenue: ${revenue}B"
-        if profit:
-            line += f", Profit: ${profit}B"
-        if market_cap:
-            line += f", Market Cap: ${market_cap}T"
-        if ytd_change:
-            line += f", YTD: {ytd_change}%"
-        line += f" ({industry})"
-        lines.append(line)
-    
+    for c in companies:
+        rank = c.get('rank', 0)
+        name = c.get('name', 'Unknown')
+        rev = c.get('revenue', 0)
+        mc = c.get('market_cap', 0)
+        ytd = c.get('ytd_change', 0)
+        industry = c.get('industry', '')
+        lines.append(f"{rank}. {name} — Revenue: ${rev}B, Market Cap: ${mc}T, YTD: {ytd}%, {industry}")
     return "\n".join(lines)
 
-
-def format_top_10_by_category(categories):
-    """Format the top 10 by different categories."""
+def format_top_10_categories(categories):
+    """Format top 10 by category."""
     if not categories:
-        return "No category data available."
-    
+        return "No data available."
     lines = []
-    for category, companies in categories.items():
-        lines.append(f"\n  **{category.replace('_', ' ').title()}:**")
-        for i, name in enumerate(companies[:10], 1):
-            lines.append(f"    {i}. {name}")
-    
+    for cat, items in categories.items():
+        lines.append(f"**{cat.replace('_', ' ').title()}:**")
+        for i, name in enumerate(items[:10], 1):
+            lines.append(f"  {i}. {name}")
     return "\n".join(lines)
 
-
-def format_top_10_innovations(innovations):
-    """Format the top 10 software engineering innovations."""
+def format_innovations(innovations):
+    """Format innovations list."""
     if not innovations:
-        return "No innovation data available."
-    
+        return "No data available."
     lines = []
-    for inv in innovations:
-        rank = inv.get('rank', 0)
-        name = inv.get('name', 'Unknown')
-        description = inv.get('description', '')
-        year = inv.get('year', '')
-        impact = inv.get('impact', '')
-        lines.append(f"  #{rank}. {name} — {description} ({year}) [Impact: {impact}]")
-    
+    for i in innovations:
+        name = i.get('name', '')
+        desc = i.get('description', '')
+        year = i.get('year', '')
+        impact = i.get('impact', '')
+        lines.append(f"• **{name}** — {desc} ({year}) [Impact: {impact}]")
     return "\n".join(lines)
-
 
 def format_processors(processors):
-    """Format processor manufacturers with key details."""
+    """Format processor list."""
     if not processors:
-        return "No processor data available."
-    
+        return "No data available."
     lines = []
     for p in processors:
-        name = p.get('name', 'Unknown')
+        name = p.get('name', '')
         country = p.get('country', '')
+        share = p.get('market_share', 0)
+        rev = p.get('revenue', 0)
         products = p.get('key_products', '')
-        market_share = p.get('market_share', 0)
-        revenue = p.get('revenue', 0)
-        lines.append(f"  • {name} ({country}) — Market Share: {market_share}%, Revenue: ${revenue}B")
-        lines.append(f"    Products: {products}")
-    
+        lines.append(f"• **{name}** ({country}) — Market Share: {share}%, Revenue: ${rev}B")
+        lines.append(f"  Products: {products}")
     return "\n".join(lines)
 
-
-def format_fringe_tech(fringe):
-    """Format fringe tech innovations."""
+def format_fringe(fringe):
+    """Format fringe tech list."""
     if not fringe:
-        return "No fringe tech data available."
-    
+        return "No data available."
     lines = []
-    for item in fringe:
-        name = item.get('name', 'Unknown')
-        description = item.get('description', '')
-        year = item.get('year', '')
-        impact = item.get('impact', '')
-        lines.append(f"  • {name} ({year}) — {description}")
-        lines.append(f"    Impact: {impact}")
-    
+    for f in fringe:
+        name = f.get('name', '')
+        desc = f.get('description', '')
+        year = f.get('year', '')
+        impact = f.get('impact', '')
+        lines.append(f"• **{name}** ({year}) — {desc}")
+        lines.append(f"  Impact: {impact}")
     return "\n".join(lines)
-
 
 def format_os_news(os_data):
-    """Format OS news with latest updates."""
+    """Format OS news."""
     if not os_data:
-        return "No OS news data available."
-    
+        return "No data available."
     lines = []
     for os_name, data in os_data.items():
         news = data.get('news', '')
         version = data.get('version', '')
-        market_share = data.get('market_share', 0)
+        share = data.get('market_share', 0)
         trend = data.get('trend', '')
         emoji = "📈" if trend == "growing" else "📉" if trend == "declining" else "➡️"
-        lines.append(f"\n  **{os_name}** {emoji} (Market Share: {market_share}%)")
-        lines.append(f"    Version: {version}")
-        lines.append(f"    News: {news}")
-    
+        lines.append(f"• **{os_name}** {emoji} (Market Share: {share}%)")
+        lines.append(f"  Version: {version}")
+        lines.append(f"  News: {news}")
     return "\n".join(lines)
 
-
-def format_market_projections(projections):
-    """Format market projections to 2035."""
+def format_projections(projections):
+    """Format market projections."""
     if not projections:
-        return "No projection data available."
-    
+        return "No data available."
     yearly = projections.get('yearly_projections', {})
     if not yearly:
-        return "No yearly projection data available."
-    
-    lines = ["  Year | AI Market ($B) | Semiconductor ($B) | Cloud ($B)"]
-    lines.append("  -----|----------------|-------------------|------------")
-    
+        return "No yearly projections available."
+    lines = ["| Year | AI Market ($B) | Semiconductor ($B) | Cloud ($B) |"]
+    lines.append("|------|----------------|-------------------|------------|")
     for year, data in yearly.items():
         ai = data.get('AI_market', 0)
         semi = data.get('semiconductor_market', 0)
         cloud = data.get('cloud_market', 0)
-        lines.append(f"  {year}  | {ai:14} | {semi:17} | {cloud:10}")
-    
+        lines.append(f"| {year} | {ai} | {semi} | {cloud} |")
     return "\n".join(lines)
 
+def format_list(items):
+    if not items:
+        return "No data available."
+    return "\n".join([f"• {item}" for item in items])
 
-def format_trends(trends):
-    """Format trends data."""
-    if not trends:
-        return "No trend data available."
-    return "\n".join([f"  • {trend}" for trend in trends])
-
-
-def format_metrics(metrics):
-    """Format metrics data."""
-    if not metrics:
-        return "No metrics data available."
-    lines = []
-    for metric in metrics:
-        if isinstance(metric, dict):
-            for key, value in metric.items():
-                lines.append(f"  • {key}: {value}")
-        else:
-            lines.append(f"  • {metric}")
-    return "\n".join(lines)
-
-
-def format_crypto(crypto):
-    """Format crypto data."""
-    if not crypto:
-        return "No crypto data available."
-    lines = []
-    for coin, data in crypto.items():
-        price = data.get('price', 0)
-        change = data.get('change_24h', 0)
-        lines.append(f"  • {coin}: ${price:.2f} (24h: {change:+.1f}%)")
-    return "\n".join(lines)
-
-
-def format_stocks(stocks):
-    """Format stock data."""
-    if not stocks:
-        return "No stock data available."
-    lines = []
-    for symbol, data in stocks.items():
-        price = data.get('price', 0)
-        change = data.get('change_24h', 0)
-        lines.append(f"  • {symbol}: ${price:.2f} (24h: {change:+.1f}%)")
-    return "\n".join(lines)
+def format_dict(data):
+    if not data:
+        return "No data available."
+    if isinstance(data, dict):
+        return "\n".join([f"• {k}: {v}" for k, v in data.items()])
+    return str(data)
