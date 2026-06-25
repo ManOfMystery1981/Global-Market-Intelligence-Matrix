@@ -37,18 +37,32 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install --upgrade pip
-          pip install requests reportlab matplotlib beautifulsoup4 lxml resend
+          pip install -r requirements.txt
 
       - name: Install Ollama
-        uses: pydantic/ollama-action@v3
-        with:
-          model: qwen2:0.5b
+        run: |
+          # Download and install Ollama
+          curl -fsSL https://ollama.com/install.sh | sh
+          
+          # Start Ollama server in background
+          ollama serve &
+          
+          # Wait for Ollama to be ready
+          sleep 10
+          
+          # Pull the model
+          ollama pull qwen2:0.5b
+          
+          # Verify installation
+          ollama list
 
       - name: Run LLM Analyst Bot
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           CUSTOMER_EMAIL: ${{ github.event.inputs.email || 'dsull1981@gmail.com' }}
           TEST_MODE: ${{ github.event.inputs.test_mode || 'false' }}
+          LLM_API_URL: "http://localhost:11434/api/generate"
+          LLM_MODEL: "qwen2:0.5b"
         run: |
           python llm_analyst_bot.py
 

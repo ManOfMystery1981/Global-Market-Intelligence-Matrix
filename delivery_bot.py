@@ -143,6 +143,21 @@ def get_sample_data():
         }
     }
 
+# In delivery_bot.py - add this function
+def get_llm_article(email, trend_data, metrics_data, market_data, os_data):
+    """Get the LLM-generated analyst article."""
+    try:
+        from llm_analyst_prompt import generate_analyst_prompt
+        from llm_analyst_bot import LLMAnalystBot
+        
+        bot = LLMAnalystBot()
+        prompt = generate_analyst_prompt(trend_data, metrics_data, market_data, os_data)
+        article = bot.wake_llm(prompt)
+        return article
+    except Exception as e:
+        print(f"⚠️ Could not get LLM article: {e}")
+        return None
+
 # --- ENHANCED PDF GENERATION ---
 def generate_enhanced_report_pdf(email, trend_data, metrics_data, codebase_stats, market_data, chart_images, os_data=None, ai_article=None):
     """Generate a professional, data-rich report with charts and market data."""
