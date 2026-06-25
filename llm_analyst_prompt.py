@@ -1,201 +1,76 @@
-# llm_analyst_prompt.py - Journalistic Style with Top 100
+# llm_analyst_prompt.py - Complete with all requested sections
 def generate_analyst_prompt(trend_data, metrics_data, crypto_data, stock_data, os_data, company_data=None):
-    """Generate a comprehensive prompt with journalistic style and top 100 companies."""
+    """Generate the complete prompt with all sections."""
     
     if company_data is None:
         from company_data_collector import TechCompanyDataCollector
         collector = TechCompanyDataCollector()
         company_data = collector.collect_all_data()
     
-    # Format all data
-    trends_text = format_trends_with_data(trend_data)
-    metrics_text = format_metrics_with_data(metrics_data)
-    crypto_text = format_crypto_with_data(crypto_data)
-    stock_text = format_stocks_with_data(stock_data)
-    os_text = format_os_with_data(os_data)
-    companies_text = format_top_100_companies(company_data.get('top_companies', []))
-    trending_text = format_trending_companies(company_data.get('trending_companies', []))
-    trends_list_text = format_cutting_edge_trends(company_data.get('cutting_edge_trends', []))
+    # Format all sections
+    top_100_text = format_top_100(company_data.get('top_100', []))
+    top_10_by_category_text = format_top_10_by_category(company_data.get('top_10_by_category', {}))
+    innovations_text = format_top_10_innovations(company_data.get('top_10_innovations', []))
+    processors_text = format_processors(company_data.get('processor_manufacturers', []))
+    fringe_text = format_fringe_tech(company_data.get('fringe_tech', []))
+    os_news_text = format_os_news(company_data.get('os_news', {}))
+    projections_text = format_market_projections(company_data.get('market_projections', {}))
     
-    prompt = f"""You are a Senior Technology Journalist writing for a premier tech industry newsletter. Write with excitement, energy, and insight — like a journalist covering the most exciting developments in tech. The current year is 2026, and we're looking ahead to 2027.
+    prompt = f"""You are a Senior Technology Journalist with 20 years of experience covering the tech industry. Write an exciting, data-driven article for a premium tech newsletter. Use ONLY the data provided below.
 
-## ⚠️ CRITICAL RULES
-1. **ONLY use the data provided in this prompt**
-2. **Write with journalistic excitement and energy** — this should feel like a must-read tech newsletter
-3. **Highlight the top 10 companies** with their rankings and what makes them special
-4. **Reference 2025, 2026, and 2027** as the current and upcoming years
-5. **Make it engaging** — use bold statements, exciting language, and clear takeaways
+## 📊 COMPLETE MARKET DATA
 
-## 📊 REAL DATA (USE ONLY THIS)
+### TOP 100 TECH COMPANIES (Ranked 1-100)
+{top_100_text}
 
-### TOP SOFTWARE TRENDS (2025-2026)
-{trends_text}
+### TOP 10 BY CATEGORY
+{top_10_by_category_text}
 
-### KEY METRICS (Current)
-{metrics_text}
+### TOP 10 SOFTWARE ENGINEERING INNOVATIONS
+{innovations_text}
 
-### CRYPTO MARKET DATA (Current)
-{crypto_text}
+### PROCESSOR MANUFACTURERS (Including Intel, AMD, ARM, Russian/Chinese)
+{processors_text}
 
-### TECH STOCK PERFORMANCE (Current)
-{stock_text}
+### FRINGE TECH INNOVATIONS
+{fringe_text}
 
-### OPERATING SYSTEM POPULARITY (Current)
-{os_text}
+### LATEST OS NEWS
+{os_news_text}
 
-### TOP 100 TECH COMPANIES (Ranked) - USE THESE RANKINGS
-{companies_text}
+### MARKET PROJECTIONS (2025-2035)
+{projections_text}
 
-### TOP 10 TRENDING COMPANIES (by Growth) - HIGHLIGHT THESE
-{trending_text}
+### TOP SOFTWARE TRENDS
+{format_list(trend_data)}
 
-### CUTTING-EDGE SOFTWARE TRENDS (2026-2027)
-{trends_list_text}
+### KEY METRICS
+{format_dict(metrics_data)}
+
+### CRYPTO & STOCK DATA
+{format_dict(crypto_data)}
+{format_dict(stock_data)}
 
 ## 📝 YOUR TASK
 
-Write an exciting, journalistic tech article (1000-1500 words) with these sections:
+Write an exciting, journalistic article with these sections:
 
-1. **🚀 The Big Picture** - Executive summary with excitement about the tech landscape
-2. **📊 Top 10 Tech Titans** - Highlight the top 10 companies with their rankings and why they dominate
-3. **🔥 Trends That Are Reshaping Everything** - Deep dive into the hottest trends
-4. **💡 Innovations That Will Define 2027** - Cutting-edge trends and what's next
-5. **🎯 What This Means for You** - Strategic recommendations for CTOs, Developers, Founders, Recruiters
+1. **🚀 The Big Picture** - Executive summary of the tech landscape in 2026
+2. **🏆 Top 100 Tech Titans** - Show the ranked list with highlights of the top 10
+3. **📊 Top 10 by Category** - Show rankings by revenue, growth, market cap, innovation
+4. **💡 Top 10 Innovations** - Software engineering breakthroughs
+5. **🔬 Processor Landscape** - Intel, AMD, ARM, RISC-V, Russian/Chinese processors
+6. **🛠️ Fringe Tech** - Raspberry Pi supercomputers, DIY projects, open source hardware
+7. **🖥️ OS News** - Latest updates for Windows, macOS, Linux, ChromeOS, FreeBSD, Android, iOS
+8. **📈 Market Projections** - AI, semiconductor, and cloud markets to 2035
 
-## 🎯 STYLE REQUIREMENTS
+## 🎯 FORMATTING
 
-- **Journalistic tone** — think "TechCrunch" meets "The Information"
-- **Exciting language** — use phrases like "breaking new ground," "reshaping the industry," "blockbuster year"
-- **Clear takeaways** — every section should have a key insight
-- **Rankings matter** — reference the top 10 companies by name and rank
-- **Future-focused** — talk about 2026 and 2027 trends
+- **Top 100**: Show as a numbered list with revenue and market cap
+- **Top 10 by Category**: Show with color-coded sections
+- **Charts**: Use ASCII charts for rankings
+- **Exciting tone** - Think "TechCrunch" meets "The Information"
+- **Future-focused** - Reference 2026 and 2027 as current years
 
-## 🚫 ABSOLUTELY FORBIDDEN
-- No boring, dry corporate language
-- No data from before 2024
-- No invented acquisitions or mergers
-- No speculation about financial results not provided
-
-Begin your exciting analysis now!"""
+Begin your analysis now!"""
     return prompt
-
-def format_top_100_companies(companies):
-    """Format the top 100 companies with rankings and key metrics."""
-    if not companies:
-        return "No company data available."
-    
-    lines = []
-    # Add the top 10 with special formatting
-    lines.append("🏆 **TOP 10 TECH TITANS (Ranked):**")
-    for company in companies[:10]:
-        name = company.get('name', 'Unknown')
-        rank = company.get('rank', 0)
-        revenue = company.get('revenue_billions', 0)
-        market_cap = company.get('market_cap_trillions', 0)
-        ytd_change = company.get('ytd_change', 0)
-        industry = company.get('industry', 'Unknown')
-        trending = company.get('trending', '')
-        
-        line = f"  #{rank}. **{name}** — Revenue: ${revenue}B"
-        if market_cap:
-            line += f" | Market Cap: ${market_cap}T"
-        if ytd_change:
-            line += f" | YTD: {ytd_change}%"
-        if trending:
-            line += f" | 🔥 {trending}"
-        lines.append(line)
-    
-    # Add the rest (ranks 11-100)
-    lines.append("\n📊 **Top 100 Tech Companies (Ranks 11-100):**")
-    for company in companies[10:]:
-        name = company.get('name', 'Unknown')
-        rank = company.get('rank', 0)
-        revenue = company.get('revenue_billions', 0)
-        industry = company.get('industry', 'Unknown')
-        lines.append(f"  #{rank}. {name} — ${revenue}B revenue ({industry})")
-    
-    return "\n".join(lines)
-
-def format_trending_companies(companies):
-    """Format the top 10 trending companies with excitement."""
-    if not companies:
-        return "No trending company data available."
-    
-    lines = ["🚀 **TOP 10 TRENDING COMPANIES (by Growth):**"]
-    for company in companies[:10]:
-        name = company.get('name', 'Unknown')
-        ytd_change = company.get('ytd_change', 0)
-        industry = company.get('industry', 'Unknown')
-        lines.append(f"  • {name}: {ytd_change}% YTD ({industry}) — 🔥 on fire!")
-    
-    return "\n".join(lines)
-
-def format_cutting_edge_trends(trends):
-    """Format cutting-edge trends with excitement."""
-    if not trends:
-        return "No trend data available."
-    
-    lines = ["💡 **CUTTING-EDGE TRENDS (2026-2027):**"]
-    for trend in trends:
-        name = trend.get('trend', 'Unknown')
-        description = trend.get('description', '')
-        adoption = trend.get('adoption_rate', 0)
-        players = ', '.join(trend.get('key_players', []))
-        lines.append(f"  • {name}: {description} (Adoption: {adoption}%, Key Players: {players})")
-    
-    return "\n".join(lines)
-
-def format_trends_with_data(trends):
-    """Format trends with specific data points."""
-    if not trends:
-        return "No trend data available."
-    return "\n".join([f"  • {trend}" for trend in trends])
-
-def format_metrics_with_data(metrics):
-    """Format metrics with specific values."""
-    if not metrics:
-        return "No metrics data available."
-    lines = []
-    for metric in metrics:
-        if isinstance(metric, dict):
-            for key, value in metric.items():
-                lines.append(f"  • {key}: {value}")
-        else:
-            lines.append(f"  • {metric}")
-    return "\n".join(lines)
-
-def format_crypto_with_data(crypto):
-    """Format crypto data with specific prices."""
-    if not crypto:
-        return "No crypto data available."
-    lines = []
-    for coin, data in crypto.items():
-        price = data.get('price', 0)
-        change = data.get('change_24h', 0)
-        lines.append(f"  • {coin}: ${price:.2f} (24h: {change:+.1f}%)")
-    return "\n".join(lines)
-
-def format_stocks_with_data(stocks):
-    """Format stock data with specific prices."""
-    if not stocks:
-        return "No stock data available."
-    lines = []
-    for symbol, data in stocks.items():
-        price = data.get('price', 0)
-        change = data.get('change_24h', 0)
-        lines.append(f"  • {symbol}: ${price:.2f} (24h: {change:+.1f}%)")
-    return "\n".join(lines)
-
-def format_os_with_data(os_data):
-    """Format OS data with specific market shares."""
-    if not os_data:
-        return "No OS data available."
-    lines = []
-    market_share = os_data.get('market_share', {})
-    for os_name, data in market_share.items():
-        share = data.get('market_share', 0)
-        trend = data.get('trend', 'stable')
-        category = data.get('category', 'Unknown')
-        emoji = "📈" if trend == "growing" else "📉" if trend == "declining" else "➡️"
-        lines.append(f"  • {os_name}: {share}% market share {emoji} ({category})")
-    return "\n".join(lines)
