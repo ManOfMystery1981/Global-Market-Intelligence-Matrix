@@ -7,11 +7,11 @@ on:
   workflow_dispatch:
     inputs:
       email:
-        description: 'Recipient email address (leave blank for webhook mode)'
+        description: 'Recipient email address'
         required: false
         default: ''
       test_mode:
-        description: 'Run in test mode (no email sent)'
+        description: 'Run in test mode'
         required: false
         default: 'false'
         type: choice
@@ -30,7 +30,7 @@ on:
 jobs:
   generate-analysis:
     runs-on: ubuntu-latest
-    timeout-minutes: 60  # ✅ Increased from 30 to 60 minutes
+    timeout-minutes: 120  # ⬅️ Increased to 2 hours
 
     steps:
       - name: Checkout Repository
@@ -48,16 +48,14 @@ jobs:
           pip install -r requirements.txt
 
       - name: Install Ollama
-        env:
-          OLLAMA_LOAD_TIMEOUT: "0"  # ✅ Disable server-side load timeout
         run: |
           pkill -f ollama || true
           sleep 2
           curl -fsSL https://ollama.com/install.sh | sh
           ollama serve &
           sleep 10
-          # Use mistral:7b for better quality
-          ollama pull mistral:7b-instruct-q4_0
+          # Use tinyllama for faster generation
+          ollama pull tinyllama:latest
           ollama list
 
       - name: Run LLM Analyst Bot
@@ -66,7 +64,7 @@ jobs:
           CUSTOMER_EMAIL: ${{ github.event.inputs.email || '' }}
           TEST_MODE: ${{ github.event.inputs.test_mode || 'false' }}
           LLM_API_URL: "http://localhost:11434/api/generate"
-          LLM_MODEL: "mistral:7b-instruct-q4_0"
+          LLM_MODEL: "tinyllama:latest"
         run: |
           python llm_analyst_bot.py
 
@@ -88,8 +86,7 @@ jobs:
             echo "📧 Generating report and sending to: $EMAIL_TO_SEND"
             python generate_full_report.py $EMAIL_TO_SEND
           else
-            echo "⚠️ No email provided. Running report generation without email..."
-            python generate_full_report.py
+            echo "⚠️ No email provided. Skipping email delivery."
           fi
 
       - name: Upload Artifacts
