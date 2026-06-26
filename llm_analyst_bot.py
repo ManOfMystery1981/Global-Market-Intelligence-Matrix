@@ -1,4 +1,4 @@
-# llm_analyst_bot.py - Complete corrected version
+# llm_analyst_bot.py - Data Arbitrage Focused Version
 import os
 import sys
 import json
@@ -7,7 +7,7 @@ import glob
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 
-# Add the current directory to the path so we can import our modules
+# Add the current directory to the path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Import data sources with fallbacks
@@ -15,7 +15,6 @@ try:
     from delivery_bot import get_latest_data, get_sample_data, parse_markdown_data
 except ImportError:
     print("⚠️ Could not import from delivery_bot.py, using fallback data functions")
-    
     def get_latest_data():
         return {
             'trends': [
@@ -33,10 +32,8 @@ except ImportError:
                 "Forks": "0"
             }
         }
-    
     def get_sample_data():
         return get_latest_data()
-    
     def parse_markdown_data(content):
         return get_latest_data()
 
@@ -65,21 +62,21 @@ except ImportError:
             return {"top_100": [], "top_10_by_category": {}, "top_10_innovations": []}
 
 try:
-    from llm_analyst_prompt import generate_section_prompt
+    from llm_analyst_prompt import generate_arbitrage_section_prompt
 except ImportError:
     print("⚠️ Could not import llm_analyst_prompt.py, using built-in prompt")
-    def generate_section_prompt(section, *args, **kwargs):
-        return f"Write a section about {section} based on the provided data."
+    def generate_arbitrage_section_prompt(section, *args, **kwargs):
+        return f"Write a data arbitrage section about {section}."
 
 
 class LLMAnalystBot:
-    """Bot that generates reports using a conversation-style segmented approach."""
+    """Bot that generates data arbitrage reports using segmented generation."""
     
     def __init__(self):
         self.llm_url = os.environ.get("LLM_API_URL", "http://localhost:11434/api/generate")
         self.model = os.environ.get("LLM_MODEL", "mistral:7b-instruct-q4_0")
         self.max_tokens = 2048
-        self.timeout = 600  # 10 minutes per segment
+        self.timeout = 600
         self.segments_per_section = 3
         
     def generate_segment(self, prompt: str, segment_name: str, context: str = "") -> str:
@@ -95,7 +92,7 @@ class LLMAnalystBot:
             "temperature": 0.5,
             "max_tokens": self.max_tokens,
             "num_ctx": 4096,
-            "system": "You are a Senior Technology Journalist writing a comprehensive report. Continue the article naturally."
+            "system": "You are a Quantitative Data Arbitrage Analyst. Output only actionable spreads and execution strategies."
         }
         
         try:
@@ -147,15 +144,14 @@ class LLMAnalystBot:
                 print(f"📊 {section_name}: {len(full_section)} characters so far")
                 
                 prompt = f"""
-Continue the {section_name} section of the tech analyst report.
+Continue the {section_name} section of the data arbitrage report.
 
 **Context from previous segments:**
 {context}
 
 **Continue writing the {section_name} section.**
-- Maintain the same professional, journalistic tone
-- Add more detail and specific examples
-- Use proper formatting with headings and bullets
+- Maintain the same sharp, math-driven, authoritative tone
+- Add more specific spreads and execution strategies
 - This is segment {i+2} of {self.segments_per_section}
 """
             else:
@@ -166,7 +162,7 @@ Continue the {section_name} section of the tech analyst report.
         return full_section
     
     def run_analysis(self) -> str:
-        """Main method to collect data and generate the report section by section."""
+        """Main method to collect data and generate the report."""
         print("🔵 Starting LLM Analyst Bot with segmented generation...")
         
         # Collect all data
@@ -207,7 +203,6 @@ Continue the {section_name} section of the tech analyst report.
             print(f"⚠️ Error getting company data: {e}")
             company_data = {}
         
-        # Combine data for prompts
         all_data = {
             'trend_data': trend_data,
             'metrics_data': metrics_data,
@@ -218,30 +213,35 @@ Continue the {section_name} section of the tech analyst report.
             'market_data': market_data if 'market_data' in locals() else {}
         }
         
-        # Generate each section with segments
+        # Generate each arbitrage section
         sections = []
         section_names = [
-            "Executive Summary",
-            "Top 100 Tech Companies",
-            "Top 10 by Category",
-            "Software Innovations",
-            "Fringe Tech Innovations",
-            "Processor Landscape",
-            "Operating System News",
-            "Market Projections",
-            "Data Arbitrage Value"
+            "Executive Arbitrage Summary",
+            "Regional SaaS Arbitrage",
+            "API Latency Arbitrage",
+            "Crypto Arbitrage Spread",
+            "Data Arbitrage Execution Vectors"
         ]
         
         for section_name in section_names:
             section_content = self.generate_section_with_segments(
                 section_name,
-                lambda s, d: generate_section_prompt(s, d.get('trend_data', []), d.get('metrics_data', []), d.get('crypto_data', {}), d.get('stock_data', {}), d.get('os_data', {}), d.get('company_data', {}), d.get('market_data', {})),
+                lambda s, d: generate_arbitrage_section_prompt(
+                    s.replace(" ", "_").lower(),
+                    d.get('trend_data', []),
+                    d.get('metrics_data', []),
+                    d.get('crypto_data', {}),
+                    d.get('stock_data', {}),
+                    d.get('os_data', {}),
+                    d.get('company_data', {}),
+                    d.get('market_data', {})
+                ),
                 all_data
             )
             if section_content:
                 sections.append((section_name, section_content))
         
-        # Combine all sections with headers
+        # Combine all sections
         full_article = ""
         for section_name, section_content in sections:
             if section_content:
@@ -254,11 +254,10 @@ Continue the {section_name} section of the tech analyst report.
         article_file = f"analyst_article_{timestamp}.md"
         
         with open(article_file, 'w') as f:
-            f.write(f"# Tech Analyst Report\n\n")
+            f.write(f"# Data Arbitrage Intelligence Report\n\n")
             f.write(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}\n\n")
             f.write(full_article)
         
-        # Print file size
         file_size = os.path.getsize(article_file)
         print(f"\n✅ Full article saved to {article_file} ({file_size} bytes)")
         return full_article

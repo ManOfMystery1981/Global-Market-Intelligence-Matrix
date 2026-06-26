@@ -1,32 +1,39 @@
-# generate_full_report.py - Combined script for full report generation
+# generate_full_report.py - Use existing article, don't regenerate
 import os
 import sys
 import subprocess
-
-# Step 1: Run the LLM analyst bot to generate the article
-print("🤖 Step 1: Generating LLM analyst article...")
-subprocess.run([sys.executable, "llm_analyst_bot.py"], check=True)
-
-# Step 2: Find the most recent article file
 import glob
-import re
-article_files = glob.glob("analyst_article_*.md")
-if article_files:
+
+def main():
+    # Step 1: Find the most recent article
+    article_files = glob.glob("analyst_article_*.md")
+    if not article_files:
+        print("❌ No article file found! Generating one...")
+        # Only generate if no article exists
+        subprocess.run([sys.executable, "llm_analyst_bot.py"], check=True)
+        article_files = glob.glob("analyst_article_*.md")
+        if not article_files:
+            print("❌ Still no article file found!")
+            sys.exit(1)
+    
     latest_article = sorted(article_files)[-1]
-    print(f"📄 Found article: {latest_article}")
+    print(f"📄 Using existing article: {latest_article}")
     
-    # Read the article content
-    with open(latest_article, 'r') as f:
-        article_content = f.read()
+    # Step 2: Get the email from arguments or environment
+    email = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("CUSTOMER_EMAIL", "")
     
-    # Step 3: Get the email from arguments or environment
-    email = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("CUSTOMER_EMAIL", "dsull1981@gmail.com")
+    if not email:
+        print("⚠️ No email provided. Skipping PDF generation.")
+        sys.exit(0)
     
-    # Step 4: Run the delivery bot with the article
-    print("📄 Step 3: Generating PDF with article...")
-    # Pass the article file path to delivery_bot via environment
+    # Step 3: Set the article path for delivery_bot
     os.environ["ANALYST_ARTICLE_PATH"] = latest_article
+    
+    # Step 4: Run the delivery bot with the existing article
+    print(f"📄 Generating PDF with existing article for {email}...")
     subprocess.run([sys.executable, "delivery_bot.py", email], check=True)
-else:
-    print("❌ No article file found!")
-    sys.exit(1)
+    
+    print("🎉 Report generation complete!")
+
+if __name__ == "__main__":
+    main()
