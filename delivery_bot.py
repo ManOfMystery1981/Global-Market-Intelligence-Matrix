@@ -122,22 +122,58 @@ def send_report_email(customer_email, pdf_data=None, is_test=False):
 
 # --- MAIN FULFILLMENT PIPELINE ---
 def dispatch_secure_fulfillment_package(customer_email):
-    """Complete fulfillment pipeline: generate enhanced report with charts and OS data."""
+    """
+    Complete fulfillment pipeline: generate enhanced report with charts and OS data.
+    """
+    print(f"🚀 Starting fulfillment for {customer_email}")
     
-    # ✅ Validate email before proceeding
-    valid_email = get_valid_email(customer_email)
-    if not valid_email:
-        print(f"❌ Invalid email: '{customer_email}'. Skipping fulfillment.")
+    # Step 1: Get market intelligence data
+    data = get_latest_data()
+    trend_data = data['trends']
+    metrics_data = data['metrics']
+    codebase_stats = data['codebase_stats']
+    print(f"📊 Loaded {len(trend_data)} trends, {len(metrics_data)} metrics")
+    
+    # Step 2: Collect live market data
+    print("📈 Fetching live market data...")
+    collector = MarketDataCollector()
+    market_data = collector.collect_all_data()
+    
+    # Step 3: Collect OS data
+    print("💻 Fetching operating system data...")
+    os_collector = OSDataCollector()
+    os_data = os_collector.collect_all_data()
+    
+    # Step 4: Generate charts
+    print("📊 Generating charts...")
+    chart_gen = ChartGenerator()
+    chart_images = chart_gen.generate_all_charts(market_data)
+    
+    # Step 5: Initialize pdf_data to None
+    pdf_data = None
+    
+    # Step 6: Generate the PDF
+    try:
+        print("📄 Generating enhanced report PDF...")
+        pdf_data = generate_enhanced_report_pdf(
+            customer_email, 
+            trend_data, 
+            metrics_data, 
+            codebase_stats,
+            market_data, 
+            chart_images,
+            os_data
+        )
+        print(f"✅ PDF generated ({len(pdf_data)} bytes)")
+    except Exception as e:
+        print(f"❌ PDF generation failed: {e}")
+        import traceback
+        traceback.print_exc()
         return False
     
-    print(f"🚀 Starting fulfillment for {valid_email}")
-    
-    # ... rest of your existing fulfillment code ...
-    # (Keep your existing data collection, PDF generation, etc.)
-    
-    # At the end, send the email
+    # Step 7: Send the email with PDF attachment
     try:
-        success = send_report_email(valid_email, pdf_data)
+        success = send_report_email(customer_email, pdf_data)
         if success:
             print("🎉 Fulfillment complete!")
             return True
@@ -147,15 +183,3 @@ def dispatch_secure_fulfillment_package(customer_email):
     except Exception as e:
         print(f"❌ Fulfillment failed with exception: {e}")
         return False
-
-if __name__ == "__main__":
-    test_email = sys.argv[1] if len(sys.argv) > 1 else "dsull1981@gmail.com"
-    is_test_mode = len(sys.argv) > 2 and sys.argv[2] == "--test"
-    
-    # ✅ Validate the test email
-    if not is_valid_email(test_email):
-        print(f"❌ Invalid test email: '{test_email}'")
-        sys.exit(1)
-    
-    print(f"🧪 Running in {'TEST' if is_test_mode else 'LIVE'} mode")
-    dispatch_secure_fulfillment_package(test_email)
