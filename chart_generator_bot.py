@@ -54,6 +54,34 @@ class ChartGenerator:
         ax.grid(axis='x', linestyle='--', alpha=0.3)
         return self._save_chart(fig)
     
+def create_price_spread_chart(self, spread_data=None):
+    """Create a price spread chart showing arbitrage opportunities."""
+    fig, ax = plt.subplots(figsize=(12, 8))
+    
+    # Sample arbitrage data - in production, this would come from real data
+    regions = ['US East', 'US West', 'EU Central', 'APAC South', 'ME North']
+    market_a = [10, 12, 15, 18, 22]
+    market_b = [8, 9, 11, 14, 17]
+    spreads = [market_a[i] - market_b[i] for i in range(len(regions))]
+    
+    x = np.arange(len(regions))
+    width = 0.35
+    
+    ax.bar(x - width/2, market_a, width, label='Market A', color='#1f77b4')
+    ax.bar(x + width/2, market_b, width, label='Market B', color='#ff7f0e')
+    
+    for i, spread in enumerate(spreads):
+        ax.text(i, max(market_a[i], market_b[i]) + 0.5, 
+                f'Spread: ${spread:.2f}', ha='center', fontsize=9, fontweight='bold')
+    
+    ax.set_title('Regional Price Spreads - Arbitrage Opportunities', fontsize=16, fontweight='bold')
+    ax.set_xlabel('Region')
+    ax.set_ylabel('Price (USD)')
+    ax.legend()
+    ax.grid(True, linestyle='--', alpha=0.3)
+    
+    return self._save_chart(fig)
+
     def create_market_indices_chart(self, index_data):
         """Create a chart showing market indices."""
         if not index_data:
@@ -174,3 +202,4 @@ class ChartGenerator:
         print("   ✅ Financial chart created")
         print("🎉 All charts generated successfully")
         return charts
+
