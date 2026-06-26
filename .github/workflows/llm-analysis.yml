@@ -1,3 +1,4 @@
+# .github/workflows/llm-analysis.yml
 name: LLM Tech Analyst - Automated Report Generation
 
 on:
@@ -6,11 +7,11 @@ on:
   workflow_dispatch:
     inputs:
       email:
-        description: 'Recipient email address'
+        description: 'Recipient email address (leave blank for webhook mode)'
         required: false
         default: ''
       test_mode:
-        description: 'Run in test mode'
+        description: 'Run in test mode (no email sent)'
         required: false
         default: 'false'
         type: choice
@@ -29,7 +30,7 @@ on:
 jobs:
   generate-analysis:
     runs-on: ubuntu-latest
-    timeout-minutes: 120  # ⬅️ Increased to 2 hours
+    timeout-minutes: 120
 
     steps:
       - name: Checkout Repository
@@ -53,7 +54,6 @@ jobs:
           curl -fsSL https://ollama.com/install.sh | sh
           ollama serve &
           sleep 10
-          # Use tinyllama for faster generation
           ollama pull tinyllama:latest
           ollama list
 
@@ -67,27 +67,26 @@ jobs:
         run: |
           python llm_analyst_bot.py
 
-- name: Generate Full Report
-  env:
-    RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-    CUSTOMER_EMAIL: ${{ github.event.inputs.email || '' }}
-    TEST_MODE: ${{ github.event.inputs.test_mode || 'false' }}
-    SEND_TEST_COPY: ${{ github.event.inputs.send_test_copy || 'false' }}
-  run: |
-    EMAIL_TO_SEND="$CUSTOMER_EMAIL"
-    
-    if [ "$SEND_TEST_COPY" == "true" ]; then
-      EMAIL_TO_SEND="dsull1981@gmail.com"
-      echo "🧪 Test copy enabled: Sending to $EMAIL_TO_SEND"
-    fi
-    
-    if [ -n "$EMAIL_TO_SEND" ]; then
-      echo "📧 Generating report and sending to: $EMAIL_TO_SEND"
-      # ✅ Use the existing article, don't regenerate
-      python generate_full_report.py $EMAIL_TO_SEND
-    else
-      echo "⚠️ No email provided. Skipping email delivery."
-    fi
+      - name: Generate Full Report
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          CUSTOMER_EMAIL: ${{ github.event.inputs.email || '' }}
+          TEST_MODE: ${{ github.event.inputs.test_mode || 'false' }}
+          SEND_TEST_COPY: ${{ github.event.inputs.send_test_copy || 'false' }}
+        run: |
+          EMAIL_TO_SEND="$CUSTOMER_EMAIL"
+          
+          if [ "$SEND_TEST_COPY" == "true" ]; then
+            EMAIL_TO_SEND="dsull1981@gmail.com"
+            echo "🧪 Test copy enabled: Sending to $EMAIL_TO_SEND"
+          fi
+          
+          if [ -n "$EMAIL_TO_SEND" ]; then
+            echo "📧 Generating PDF with existing article for: $EMAIL_TO_SEND"
+            python generate_full_report.py $EMAIL_TO_SEND
+          else
+            echo "⚠️ No email provided. Skipping email delivery."
+          fi
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
