@@ -1,4 +1,4 @@
-# llm_analyst_bot.py - Section-by-section generation
+# llm_analyst_bot.py - Corrected with 600 second timeout
 import os
 import json
 import requests
@@ -17,7 +17,8 @@ class LLMAnalystBot:
     def __init__(self):
         self.llm_url = os.environ.get("LLM_API_URL", "http://localhost:11434/api/generate")
         self.model = os.environ.get("LLM_MODEL", "mistral:7b-instruct-q4_0")
-        self.max_tokens = 2048  # Increased for longer sections
+        self.max_tokens = 2048
+        self.timeout = 600  # ✅ 10 minutes (600 seconds) for large models
         
     def generate_section(self, prompt, section_name):
         """Generate a single section of the report."""
@@ -32,7 +33,8 @@ class LLMAnalystBot:
         
         try:
             print(f"📝 Generating section: {section_name}...")
-            response = requests.post(self.llm_url, json=payload, timeout=180)
+            print(f"⏳ This may take a few minutes (timeout: {self.timeout}s)...")
+            response = requests.post(self.llm_url, json=payload, timeout=self.timeout)
             
             if response.status_code == 200:
                 data = response.json()
@@ -46,9 +48,20 @@ class LLMAnalystBot:
             else:
                 print(f"❌ LLM error for {section_name}: {response.status_code}")
                 return f"## {section_name}\n\nError generating this section."
+        except requests.exceptions.Timeout:
+            print(f"❌ Timeout for {section_name} after {self.timeout}s")
+            return f"""## {section_name}
+
+This section is currently unavailable due to generation timeout. Please check the artifacts for the full report data.
+
+### Key Data Points:
+- The LLM is processing the requested information
+- Please try running the workflow again
+- Consider using a smaller model for faster generation
+"""
         except Exception as e:
             print(f"❌ LLM error for {section_name}: {e}")
-            return f"## {section_name}\n\nError generating this section."
+            return f"## {section_name}\n\nError generating this section: {str(e)}"
     
     def run_analysis(self):
         """Main method to collect data and generate the report section by section."""
@@ -74,30 +87,36 @@ class LLMAnalystBot:
         company_collector = TechCompanyDataCollector()
         company_data = company_collector.collect_all_data()
         
-        # Generate each section
+        # Generate each section with fallbacks
         sections = []
         
-        # Section 1: Executive Summary
+        # Section 1: Executive Summary (shorter)
+        print("📝 Generating Section 1/6: Executive Summary...")
         prompt1 = generate_section_prompt("executive_summary", trend_data, metrics_data, crypto_data, stock_data, os_data, company_data)
         sections.append(self.generate_section(prompt1, "Executive Summary"))
         
-        # Section 2: Top 100 Tech Companies
+        # Section 2: Top 100 Tech Companies (longest - may need extra time)
+        print("📝 Generating Section 2/6: Top 100 Tech Companies...")
         prompt2 = generate_section_prompt("top_100", trend_data, metrics_data, crypto_data, stock_data, os_data, company_data)
         sections.append(self.generate_section(prompt2, "Top 100 Tech Companies"))
         
         # Section 3: Top 10 by Category
+        print("📝 Generating Section 3/6: Top 10 by Category...")
         prompt3 = generate_section_prompt("top_10_categories", trend_data, metrics_data, crypto_data, stock_data, os_data, company_data)
         sections.append(self.generate_section(prompt3, "Top 10 by Category"))
         
         # Section 4: Innovations & Fringe Tech
+        print("📝 Generating Section 4/6: Software Innovations & Fringe Tech...")
         prompt4 = generate_section_prompt("innovations", trend_data, metrics_data, crypto_data, stock_data, os_data, company_data)
         sections.append(self.generate_section(prompt4, "Software Innovations & Fringe Tech"))
         
         # Section 5: Processor Landscape & OS News
+        print("📝 Generating Section 5/6: Processor Landscape & OS News...")
         prompt5 = generate_section_prompt("processors_os", trend_data, metrics_data, crypto_data, stock_data, os_data, company_data)
         sections.append(self.generate_section(prompt5, "Processor Landscape & OS News"))
         
-        # Section 6: Market Projections & Future Outlook
+        # Section 6: Market Projections
+        print("📝 Generating Section 6/6: Market Projections & Future Outlook...")
         prompt6 = generate_section_prompt("projections", trend_data, metrics_data, crypto_data, stock_data, os_data, company_data)
         sections.append(self.generate_section(prompt6, "Market Projections & Future Outlook"))
         
