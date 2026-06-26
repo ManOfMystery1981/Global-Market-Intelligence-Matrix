@@ -1,4 +1,4 @@
-# .github/workflows/llm-analysis.yml - Updated with larger model
+# .github/workflows/llm-analysis.yml
 name: LLM Tech Analyst - Automated Report Generation
 
 on:
@@ -30,7 +30,7 @@ on:
 jobs:
   generate-analysis:
     runs-on: ubuntu-latest
-    timeout-minutes: 45  # Increased for larger model
+    timeout-minutes: 60  # ✅ Increased from 30 to 60 minutes
 
     steps:
       - name: Checkout Repository
@@ -48,13 +48,15 @@ jobs:
           pip install -r requirements.txt
 
       - name: Install Ollama
+        env:
+          OLLAMA_LOAD_TIMEOUT: "0"  # ✅ Disable server-side load timeout
         run: |
           pkill -f ollama || true
           sleep 2
           curl -fsSL https://ollama.com/install.sh | sh
           ollama serve &
           sleep 10
-          # Use Mistral 7B for better quality and longer context
+          # Use mistral:7b for better quality
           ollama pull mistral:7b-instruct-q4_0
           ollama list
 
