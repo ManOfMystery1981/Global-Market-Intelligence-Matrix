@@ -1,3 +1,127 @@
+# delivery_bot.py - Add this at the top of the file for debugging
+import sys
+import traceback
+
+# Force stdout to be line-buffered
+sys.stdout.reconfigure(line_buffering=True)
+sys.stderr.reconfigure(line_buffering=True)
+
+# Then in dispatch_secure_fulfillment_package:
+def dispatch_secure_fulfillment_package(customer_email):
+    """
+    Complete fulfillment pipeline: generate enhanced report with charts and OS data.
+    """
+    print(f"🚀 Starting fulfillment for {customer_email}")
+    sys.stdout.flush()
+    
+    # Step 1: Get market intelligence data
+    try:
+        print("📊 Getting market data...")
+        data = get_latest_data()
+        trend_data = data['trends']
+        metrics_data = data['metrics']
+        codebase_stats = data['codebase_stats']
+        print(f"📊 Loaded {len(trend_data)} trends, {len(metrics_data)} metrics")
+    except Exception as e:
+        print(f"❌ Failed to get market data: {e}")
+        traceback.print_exc()
+        return False
+    
+    # Step 2: Collect live market data
+    try:
+        print("📈 Fetching live market data...")
+        collector = MarketDataCollector()
+        market_data = collector.collect_all_data()
+    except Exception as e:
+        print(f"❌ Failed to get market data: {e}")
+        traceback.print_exc()
+        return False
+    
+    # Step 3: Collect OS data
+    try:
+        print("💻 Fetching operating system data...")
+        os_collector = OSDataCollector()
+        os_data = os_collector.collect_all_data()
+    except Exception as e:
+        print(f"❌ Failed to get OS data: {e}")
+        traceback.print_exc()
+        return False
+    
+    # Step 4: Generate charts
+    try:
+        print("📊 Generating charts...")
+        chart_gen = ChartGenerator()
+        chart_images = chart_gen.generate_all_charts(market_data)
+    except Exception as e:
+        print(f"❌ Failed to generate charts: {e}")
+        traceback.print_exc()
+        return False
+    
+    # Step 5: Initialize pdf_data to None
+    pdf_data = None
+    
+#    # Step 6: Generate the PDF
+#    try:
+#        print("📄 Generating enhanced report PDF...")
+#        print(f"📧 Email: {customer_email}")
+#        print(f"📊 Trends: {len(trend_data)}")
+#        print(f"📊 Metrics: {len(metrics_data)}")
+#        print(f"📊 Charts: {len(chart_images) if chart_images else 0}")
+#        
+#        pdf_data = generate_enhanced_report_pdf(
+#            customer_email, 
+#            trend_data, 
+#            metrics_data, 
+#            codebase_stats,
+#            market_data, 
+#            chart_images,
+#            os_data
+#        )
+
+def generate_enhanced_report_pdf(...):
+    """Generate a professional, data-rich report with charts and market data."""
+    print("🔵 generate_enhanced_report_pdf called")
+    
+    try:
+        buffer = BytesIO()
+        # ... rest of the PDF generation ...
+        
+        doc.build(story)
+        pdf_buffer = buffer.getvalue()
+        buffer.close()
+        
+        print(f"🔵 PDF built, size: {len(pdf_buffer)} bytes")
+        return pdf_buffer
+    except Exception as e:
+        print(f"🔵 PDF generation failed: {e}")
+        traceback.print_exc()
+        return None
+        
+        if pdf_data is None:
+            print("❌ PDF generation returned None!")
+            return False
+        
+        print(f"✅ PDF generated ({len(pdf_data)} bytes)")
+    except Exception as e:
+        print(f"❌ PDF generation failed: {e}")
+        traceback.print_exc()
+        return False
+    
+    # Step 7: Send the email with PDF attachment
+    try:
+        print(f"📨 Sending email to {customer_email}...")
+        success = send_report_email(customer_email, pdf_data)
+        if success:
+            print("🎉 Fulfillment complete!")
+            return True
+        else:
+            print("❌ Fulfillment failed at email step.")
+            return False
+    except Exception as e:
+        print(f"❌ Fulfillment failed with exception: {e}")
+        traceback.print_exc()
+        return False
+
 # delivery_bot.py - Complete with email validation
 import os
 import sys
