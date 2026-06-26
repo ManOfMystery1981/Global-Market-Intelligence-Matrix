@@ -18,7 +18,7 @@ class LLMAnalystBot:
         self.llm_url = os.environ.get("LLM_API_URL", "http://localhost:11434/api/generate")
         self.model = os.environ.get("LLM_MODEL", "mistral:7b-instruct-q4_0")
         self.max_tokens = 2048
-        self.timeout = 600  # ✅ 10 minutes (600 seconds) for large models
+        self.timeout = 6000  # ✅ 10 minutes (600 seconds) for large models
         
     def generate_section(self, prompt, section_name):
         """Generate a single section of the report."""
