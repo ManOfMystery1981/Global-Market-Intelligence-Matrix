@@ -1,0 +1,21 @@
+# Global Market Intelligence Matrix - Source Governance Register
+ai_hardware:
+  endpoint: "https://coingecko.com"
+  identifiers: ["bitcoin", "ethereum", "solana"]
+  license: "Public API Free Tier"
+  refresh_rate: "1H"
+  failover_strategy: "Stale Cache Baseline"
+
+macro_liquidity:
+  endpoint: "https://stlouisfed.org"
+  identifiers: ["WALCL", "M2SL", "FEDFUNDS"]
+  license: "Open FRED Terms"
+  refresh_rate: "24H"
+  failover_strategy: "Rolling 30-Day Moving Average"
+
+compute_energy:
+  endpoint: "https://yahoo.com"
+  identifiers: ["CCJ", "UUUU", "NLR", "COPPER"]
+  license: "Public Feed Ingestion"
+  refresh_rate: "4H"
+  failover_strategy: "Previous Close Session Mapping"

@@ -1,92 +1,89 @@
+#!/usr/bin/env python3
 import csv
-import math
+import os
 
 class IndustryStandardReport:
     """
-    Institutional Engine: Compiles dense tabular datasets alongside 
-    mathematical predictive models and dynamic vector SVG charts.
+    Visualization Core: Renders structured spreadsheets alongside responsive, 
+    dark-mode terminal interfaces embedded with inline vector charts.
     """
     def generate_report(self, playbook, expert_narrative):
-        # 1. Output the raw CSV data for backtesting
         csv_filename = "macro_alpha_dataset.csv"
-        csv_fields = ["ticker", "category", "price", "trend", "narrative", "z_score", "probability_pct", "kelly_fraction_pct"]
+        csv_fields = ["ticker", "category", "price", "trend", "conviction_score", "z_score", "probability_pct", "kelly_fraction_pct"]
         
         try:
             with open(csv_filename, mode='w', newline='', encoding='utf-8') as f:
                 writer = csv.DictWriter(f, fieldnames=csv_fields)
                 writer.writeheader()
                 for p in playbook:
-                    # Filter matching output parameters
-                    row_data = {k: p.get(k, "0") for k in csv_fields[:5]}
-                    row_data["z_score"] = f"{p.get('z_score', 0.0):.2f}"
-                    row_data["probability_pct"] = f"{p.get('probability_pct', 50.0):.1f}%"
-                    row_data["kelly_fraction_pct"] = f"{p.get('kelly_fraction_pct', 0.0):.1f}%"
+                    row_data = {
+                        "ticker": p.get("ticker"),
+                        "category": p.get("category"),
+                        "price": f"{p.get('price'):.2f}",
+                        "trend": p.get("trend"),
+                        "conviction_score": str(p.get("conviction_score")),
+                        "z_score": f"{p.get('z_score', 0.0):.2f}",
+                        "probability_pct": f"{p.get('probability_pct', 50.0):.1f}",
+                        "kelly_fraction_pct": f"{p.get('kelly_fraction_pct', 0.0):.1f}"
+                    }
                     writer.writerow(row_data)
             print(f"✅ Quantitative CSV Dataset Exported: {csv_filename}")
         except Exception as e:
             print(f"Error generating CSV: {e}")
 
-        # 2. Build High-Density Visual Table Rows with Predictive Math Metrics
         rows = ""
         for p in playbook:
-            badge_class = "breakout" if p['trend'] == "BREAKOUT" else "stable"
+            badge_style = "background:#10b981; color:#0f172a;" if p['trend'] == "BREAKOUT" else "background:#475569; color:#cbd5e1;"
             rows += f"""
-            <tr class='{badge_class}'>
-                <td><strong>{p['ticker']}</strong></td>
-                <td>{p['category'].replace('_',' ')}</td>
-                <td>${p['price']:,.2f}</td>
-                <td><span class='badge badge-{badge_class}'>{p['trend']}</span></td>
-                <td><code>Z = {p['z_score']:+.2f}</code></td>
-                <td><strong>{p['probability_pct']:.1f}%</strong></td>
-                <td style='color: #10b981;'>{p['kelly_fraction_pct']:.1f}%</td>
-                <td class='narrative'>{p['narrative']}</td>
+            <tr style='border-bottom: 1px solid #334155;'>
+                <td style='padding:12px;'><strong>{p['ticker']}</strong></td>
+                <td style='padding:12px;'>{p['category'].replace('_',' ')}</td>
+                <td style='padding:12px;'>${p['price']:,.2f}</td>
+                <td style='padding:12px;'><span style='padding:3px 6px; border-radius:4px; font-weight:bold; font-size:11px; {badge_style}'>{p['trend']}</span></td>
+                <td style='padding:12px; color:#38bdf8;'><code>{p['z_score']:+.2f}</code></td>
+                <td style='padding:12px;'><strong>{p['conviction_score']}/100</strong></td>
+                <td style='padding:12px; color:#10b981;'>{p['kelly_fraction_pct']:.1f}%</td>
+                <td style='padding:12px; font-size:12px; color:#94a3b8;'>{p['source']}</td>
             </tr>
             """
 
-        # 3. Compile Programmatic SVG Volatility Charts
-        svg_charts = self._compile_vector_visuals(playbook[:8])
+        svg_charts = self._compile_vector_visuals(playbook[:4])
 
-        # 4. Inject Assembly HTML Template Core
         html_template = f"""
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="utf-8">
-            <title>Institutional Multi-Asset Playbook</title>
+            <title>AI Infrastructure Market Intelligence Playbook</title>
             <style>
-                body {{ font-family: 'Inter', Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 40px; margin: 0; }}
-                .container {{ max-width: 1300px; margin: auto; background: #1e293b; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); }}
-                h1 {{ font-size: 24px; color: #f1f5f9; border-bottom: 2px solid #334155; padding-bottom: 20px; letter-spacing: 1px; }}
-                h2 {{ font-size: 18px; color: #94a3b8; margin-top: 30px; text-transform: uppercase; letter-spacing: 0.5px; }}
-                .economist-brief {{ background: #0f172a; padding: 30px; border-left: 4px solid #10b981; margin: 20px 0; border-radius: 0 8px 8px 0; line-height: 1.7; font-size: 15px; color: #cbd5e1; }}
-                .visual-matrix {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin: 25px 0; }}
-                .chart-card {{ background: #0f172a; padding: 20px; border-radius: 8px; border: 1px solid #334155; text-align: center; }}
-                .chart-card h4 {{ margin: 0 0 15px 0; color: #f1f5f9; font-size: 14px; }}
-                table {{ width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }}
-                th {{ text-align: left; padding: 15px; background: #334155; color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 12px; }}
-                td {{ padding: 15px; border-bottom: 1px solid #334155; color: #e2e8f0; }}
-                .badge {{ padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; }}
-                .badge-breakout {{ background: #10b981; color: #0f172a; }}
-                .badge-stable {{ background: #475569; color: #cbd5e1; }}
-                code {{ font-family: 'Courier New', Courier, monospace; color: #38bdf8; background: #0f172a; padding: 2px 6px; border-radius: 4px; }}
+                body {{ font-family: 'Inter', Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 40px; margin: 0; line-height: 1.6; }}
+                .container {{ max-width: 1200px; margin: auto; background: #1e293b; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }}
+                h1 {{ font-size: 26px; border-bottom: 2px solid #334155; padding-bottom: 15px; margin-top: 0; color: #f1f5f9; }}
+                h2 {{ font-size: 16px; color: #38bdf8; text-transform: uppercase; margin-top: 30px; letter-spacing: 1px; }}
+                h3 {{ font-size: 15px; color: #e2e8f0; border-left: 3px solid #38bdf8; padding-left: 10px; margin-top: 25px; }}
+                .visual-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin: 20px 0; }}
+                .chart-box {{ background: #0f172a; padding: 20px; border-radius: 8px; border: 1px solid #334155; text-align: center; }}
+                table {{ width: 100%; border-collapse: collapse; margin-top: 15px; text-align: left; font-size: 13px; }}
+                th {{ padding: 12px; background: #0f172a; color: #94a3b8; font-size: 11px; text-transform: uppercase; }}
+                hr {{ border: 0; height: 1px; background: #334155; margin: 30px 0; }}
             </style>
         </head>
         <body>
             <div class="container">
-                <h1>🏛️ GLOBAL MARKET INTELLIGENCE MATRIX</h1>
-                <h2>Strategic Predictive Narrative</h2>
-                <div class="economist-brief">{expert_narrative}</div>
+                <h1>🏛️ AI INFRASTRUCTURE MARKET INTELLIGENCE MATRIX</h1>
                 
-                <h2>📊 Predictive Volatility Matrix (Cross-Asset Divergences)</h2>
-                <div class="visual-matrix">
+                {expert_narrative}
+                
+                <h2>📊 Statistical Divergence Distributions</h2>
+                <div class="visual-grid">
                     {svg_charts}
                 </div>
 
-                <h2>📋 Quant Arbitrage Data Ledger</h2>
+                <h2>📋 Tactical Multi-Factor Ledger</h2>
                 <table>
-                    <tr>
-                        <th>Asset</th><th>Sector Class</th><th>Spot Price</th><th>Signal</th>
-                        <th>Z-Divergence</th><th>Implied Prob</th><th>Kelly Size</th><th>Tactical Narrative</th>
+                    <tr style='background:#0f172a;'>
+                        <th>Asset Key</th><th>Niche Category</th><th>Spot Price</th><th>Signal</th>
+                        <th>Z-Divergence</th><th>Conviction</th><th>Kelly Fraction</th><th>Audit Source</th>
                     </tr>
                     {rows}
                 </table>
@@ -102,23 +99,20 @@ class IndustryStandardReport:
         return html_filename, csv_filename
 
     def _compile_vector_visuals(self, target_assets):
-        """Compiles clean programmatic SVG spark-graphs dynamically."""
         svg_blocks = ""
         for a in target_assets:
-            # Scale mathematical variance lines into safe visualization pixels
             z = abs(a.get('z_score', 1.0))
-            height_factor = min(int(z * 25), 80)
-            color = "#10b981" if a['trend'] == "BREAKOUT" else "#64748b"
+            height = min(int(z * 22), 75)
+            color = "#10b981" if a['trend'] == "BREAKOUT" else "#38bdf8"
             
             svg_blocks += f"""
-            <div class="chart-card">
-                <h4>{a['ticker']} Divergence Profile</h4>
-                <svg width="220" height="90" style="background: #0b1329; border-radius: 4px;">
-                    <!-- Probability distribution area fill mapping -->
-                    <path d="M10 80 Q 60 {100 - height_factor}, 110 {90 - height_factor} T 210 80" fill="none" stroke="{color}" stroke-width="3"/>
-                    <line x1="10" y1="80" x2="210" y2="80" stroke="#334155" stroke-dasharray="4"/>
-                    <circle cx="110" cy="{90 - height_factor}" r="5" fill="#f43f5e"/>
-                    <text x="15" y="25" fill="#94a3b8" font-size="10" font-family="sans-serif">P(Alpha) = {a['probability_pct']:.1f}%</text>
+            <div class="chart-box">
+                <span style='font-size:12px; font-weight:bold; color:#f1f5f9;'>{a['ticker']} Momentum Curve</span>
+                <svg width="220" height="90" style="background:#090d16; border-radius:4px; margin-top:10px;">
+                    <path d="M10 80 Q 60 {100 - height}, 110 {90 - height} T 210 80" fill="none" stroke="{color}" stroke-width="3"/>
+                    <line x1="10" y1="80" x2="210" y2="80" stroke="#334155" stroke-dasharray="3"/>
+                    <circle cx="110" cy="{90 - height}" r="4" fill="#f43f5e"/>
+                    <text x="12" y="22" fill="#64748b" font-size="9" font-family="monospace">Conviction: {a['conviction_score']}/100</text>
                 </svg>
             </div>
             """
