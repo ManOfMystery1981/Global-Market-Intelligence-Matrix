@@ -10,7 +10,7 @@ jobs:
   generate-sitemap:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Required to allow the bot to commit the sitemap
+      contents: write 
     steps:
       - name: Checkout Code Base
         uses: actions/checkout@v4
@@ -20,9 +20,7 @@ jobs:
       - name: Generate Dynamic Sitemap Matrix
         uses: cicirello/generate-sitemap@v1
         with:
-          # Update this URL to match your actual GitHub Pages site
-          # Replace 'your-username' and 'Global-Software-Intelligence-Matrix'
-          base-url-path: https://your-username.github.io/Global-Software-Intelligence-Matrix/
+          base-url-path: https://github.io
           drop-html-extension: true
           include-pdf: false
 

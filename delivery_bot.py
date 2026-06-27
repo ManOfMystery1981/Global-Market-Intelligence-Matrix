@@ -3,7 +3,7 @@ import json
 import base64
 import resend
 
-# Authenticate the Resend API engine from your GitHub Actions secret vault
+# Authenticate Third-Party APIs from environment
 resend.api_key = os.environ.get("RESEND_API_KEY")
 
 def dispatch_secure_fulfillment_package(html_path, csv_path):
@@ -11,10 +11,13 @@ def dispatch_secure_fulfillment_package(html_path, csv_path):
     Autonomous Functional Delivery Engine: Reads subscriber records from local JSON storage
     and handles secure, isolated email routing through Resend.
     """
+    print("🗄️ Loading subscriber ledger from local storage...")
     try:
-        print("🗄️ Loading subscriber ledger from local storage...")
         with open("subscribers.json", "r", encoding="utf-8") as f:
             subscribers = json.load(f)
+            if isinstance(subscribers, dict):
+                print("⚠️ Warning: subscribers.json was structured as a dictionary. Resetting to array format.")
+                subscribers = []
     except FileNotFoundError:
         print("⚠️ subscribers.json not detected. Halting compilation.")
         return False
@@ -44,13 +47,16 @@ def dispatch_secure_fulfillment_package(html_path, csv_path):
         {"content": csv_encoded, "filename": "macro_alpha_dataset.csv"}
     ]
 
-    # Individual loop deployment prevents clients from seeing each other's emails
     all_successful = True
-    for email in subscribers:
+    for client in subscribers:
+        email = client.get('email')
+        if client.get('status') != 'active':
+            continue
+            
         try:
             resend.Emails.send({
                 "from": "Institutional Research <delivery@global-market-intelligence-matrix.dedyn.io>",
-                "to": [email],
+                "to": email,
                 "subject": "📊 DATA UPDATE: Institutional Market Playbook & Alpha Dataset",
                 "html": """
                     <div style="font-family: Arial, sans-serif; color: #1e293b; padding: 20px; line-height: 1.6;">
@@ -72,6 +78,5 @@ def dispatch_secure_fulfillment_package(html_path, csv_path):
         except Exception as mail_error:
             print(f"❌ Resend delivery failure for {email}: {mail_error}")
             all_successful = False
-           
-    return all_successful
 
+    return all_successful

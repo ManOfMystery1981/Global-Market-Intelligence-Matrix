@@ -1,76 +1,10 @@
 ticker,category,price,trend,narrative
-Cr_1,Crypto,20665.11,STABLE,Market conditions within normal liquidity variance.
-Cr_2,Crypto,10988.55,STABLE,Market conditions within normal liquidity variance.
-Cr_3,Crypto,21361.88,STABLE,Market conditions within normal liquidity variance.
-Cr_4,Crypto,12305.89,BREAKOUT,Momentum Shift: Cr_4 exhibiting 2.0x volume vs 30d avg.
-Cr_5,Crypto,14266.77,BREAKOUT,Momentum Shift: Cr_5 exhibiting 2.6x volume vs 30d avg.
-Cr_6,Crypto,56658.76,BREAKOUT,Momentum Shift: Cr_6 exhibiting 2.2x volume vs 30d avg.
-Cr_7,Crypto,2299.39,BREAKOUT,Momentum Shift: Cr_7 exhibiting 2.6x volume vs 30d avg.
-Cr_8,Crypto,13969.37,BREAKOUT,Momentum Shift: Cr_8 exhibiting 13.4x volume vs 30d avg.
-Cr_9,Crypto,47287.93,BREAKOUT,Momentum Shift: Cr_9 exhibiting 2.7x volume vs 30d avg.
-Cr_10,Crypto,31172.78,STABLE,Market conditions within normal liquidity variance.
-Cr_11,Crypto,56801.95,BREAKOUT,Momentum Shift: Cr_11 exhibiting 20.3x volume vs 30d avg.
-Cr_12,Crypto,30345.3,BREAKOUT,Momentum Shift: Cr_12 exhibiting 4.9x volume vs 30d avg.
-Cr_13,Crypto,58507.05,BREAKOUT,Momentum Shift: Cr_13 exhibiting 3.5x volume vs 30d avg.
-Cr_14,Crypto,39811.26,BREAKOUT,Momentum Shift: Cr_14 exhibiting 4.0x volume vs 30d avg.
-Cr_15,Crypto,56332.97,BREAKOUT,Momentum Shift: Cr_15 exhibiting 3.8x volume vs 30d avg.
-AI_1,AI_Stocks,43864.43,STABLE,Market conditions within normal liquidity variance.
-AI_2,AI_Stocks,53522.41,BREAKOUT,Momentum Shift: AI_2 exhibiting 15.7x volume vs 30d avg.
-AI_3,AI_Stocks,45027.34,BREAKOUT,Momentum Shift: AI_3 exhibiting 2.6x volume vs 30d avg.
-AI_4,AI_Stocks,59090.53,STABLE,Market conditions within normal liquidity variance.
-AI_5,AI_Stocks,5911.43,STABLE,Market conditions within normal liquidity variance.
-AI_6,AI_Stocks,54776.63,STABLE,Market conditions within normal liquidity variance.
-AI_7,AI_Stocks,6865.56,BREAKOUT,Momentum Shift: AI_7 exhibiting 7.1x volume vs 30d avg.
-AI_8,AI_Stocks,38392.95,BREAKOUT,Momentum Shift: AI_8 exhibiting 2.3x volume vs 30d avg.
-AI_9,AI_Stocks,46476.38,STABLE,Market conditions within normal liquidity variance.
-AI_10,AI_Stocks,51714.78,BREAKOUT,Momentum Shift: AI_10 exhibiting 2.3x volume vs 30d avg.
-AI_11,AI_Stocks,24475.15,BREAKOUT,Momentum Shift: AI_11 exhibiting 3.7x volume vs 30d avg.
-AI_12,AI_Stocks,12782.16,BREAKOUT,Momentum Shift: AI_12 exhibiting 3.1x volume vs 30d avg.
-AI_13,AI_Stocks,43742.56,BREAKOUT,Momentum Shift: AI_13 exhibiting 4.9x volume vs 30d avg.
-AI_14,AI_Stocks,52562.44,BREAKOUT,Momentum Shift: AI_14 exhibiting 4.8x volume vs 30d avg.
-AI_15,AI_Stocks,12444.75,BREAKOUT,Momentum Shift: AI_15 exhibiting 33.1x volume vs 30d avg.
-Em_1,Emerging_NFTs,9845.53,BREAKOUT,Momentum Shift: Em_1 exhibiting 7.6x volume vs 30d avg.
-Em_2,Emerging_NFTs,41564.48,BREAKOUT,Momentum Shift: Em_2 exhibiting 2.1x volume vs 30d avg.
-Em_3,Emerging_NFTs,14057.97,BREAKOUT,Momentum Shift: Em_3 exhibiting 3.3x volume vs 30d avg.
-Em_4,Emerging_NFTs,6530.14,BREAKOUT,Momentum Shift: Em_4 exhibiting 2.0x volume vs 30d avg.
-Em_5,Emerging_NFTs,21848.75,BREAKOUT,Momentum Shift: Em_5 exhibiting 8.9x volume vs 30d avg.
-Em_6,Emerging_NFTs,2566.84,BREAKOUT,Momentum Shift: Em_6 exhibiting 24.2x volume vs 30d avg.
-Em_7,Emerging_NFTs,40009.82,BREAKOUT,Momentum Shift: Em_7 exhibiting 2.0x volume vs 30d avg.
-Em_8,Emerging_NFTs,47114.86,BREAKOUT,Momentum Shift: Em_8 exhibiting 4.8x volume vs 30d avg.
-Em_9,Emerging_NFTs,16138.24,BREAKOUT,Momentum Shift: Em_9 exhibiting 125.1x volume vs 30d avg.
-Em_10,Emerging_NFTs,42036.14,BREAKOUT,Momentum Shift: Em_10 exhibiting 4.3x volume vs 30d avg.
-Em_11,Emerging_NFTs,45267.56,BREAKOUT,Momentum Shift: Em_11 exhibiting 12.1x volume vs 30d avg.
-Em_12,Emerging_NFTs,48745.05,BREAKOUT,Momentum Shift: Em_12 exhibiting 3.3x volume vs 30d avg.
-Em_13,Emerging_NFTs,33199.96,BREAKOUT,Momentum Shift: Em_13 exhibiting 2.7x volume vs 30d avg.
-Em_14,Emerging_NFTs,27028.81,BREAKOUT,Momentum Shift: Em_14 exhibiting 2.3x volume vs 30d avg.
-Em_15,Emerging_NFTs,56615.75,STABLE,Market conditions within normal liquidity variance.
-Co_1,Commodities,16314.61,STABLE,Market conditions within normal liquidity variance.
-Co_2,Commodities,19501.37,STABLE,Market conditions within normal liquidity variance.
-Co_3,Commodities,31986.09,STABLE,Market conditions within normal liquidity variance.
-Co_4,Commodities,41092.42,STABLE,Market conditions within normal liquidity variance.
-Co_5,Commodities,98.19,STABLE,Market conditions within normal liquidity variance.
-Co_6,Commodities,41441.83,BREAKOUT,Momentum Shift: Co_6 exhibiting 2.0x volume vs 30d avg.
-Co_7,Commodities,59301.63,BREAKOUT,Momentum Shift: Co_7 exhibiting 4.5x volume vs 30d avg.
-Co_8,Commodities,43232.92,STABLE,Market conditions within normal liquidity variance.
-Co_9,Commodities,18136.35,BREAKOUT,Momentum Shift: Co_9 exhibiting 4.1x volume vs 30d avg.
-Co_10,Commodities,35371.72,BREAKOUT,Momentum Shift: Co_10 exhibiting 3.8x volume vs 30d avg.
-Co_11,Commodities,4391.4,BREAKOUT,Momentum Shift: Co_11 exhibiting 5.7x volume vs 30d avg.
-Co_12,Commodities,45494.16,BREAKOUT,Momentum Shift: Co_12 exhibiting 14.3x volume vs 30d avg.
-Co_13,Commodities,33214.52,STABLE,Market conditions within normal liquidity variance.
-Co_14,Commodities,29418.63,BREAKOUT,Momentum Shift: Co_14 exhibiting 2.7x volume vs 30d avg.
-Co_15,Commodities,29130.33,BREAKOUT,Momentum Shift: Co_15 exhibiting 1.9x volume vs 30d avg.
-Fo_1,Forex,42981.99,BREAKOUT,Momentum Shift: Fo_1 exhibiting 2.3x volume vs 30d avg.
-Fo_2,Forex,11776.53,BREAKOUT,Momentum Shift: Fo_2 exhibiting 2.7x volume vs 30d avg.
-Fo_3,Forex,41983.18,BREAKOUT,Momentum Shift: Fo_3 exhibiting 3.7x volume vs 30d avg.
-Fo_4,Forex,10838.7,STABLE,Market conditions within normal liquidity variance.
-Fo_5,Forex,45501.74,BREAKOUT,Momentum Shift: Fo_5 exhibiting 3.4x volume vs 30d avg.
-Fo_6,Forex,27454.68,BREAKOUT,Momentum Shift: Fo_6 exhibiting 1.9x volume vs 30d avg.
-Fo_7,Forex,29471.72,BREAKOUT,Momentum Shift: Fo_7 exhibiting 5.1x volume vs 30d avg.
-Fo_8,Forex,46387.43,BREAKOUT,Momentum Shift: Fo_8 exhibiting 2.8x volume vs 30d avg.
-Fo_9,Forex,55320.59,BREAKOUT,Momentum Shift: Fo_9 exhibiting 3.8x volume vs 30d avg.
-Fo_10,Forex,46987.68,STABLE,Market conditions within normal liquidity variance.
-Fo_11,Forex,3734.98,BREAKOUT,Momentum Shift: Fo_11 exhibiting 3.8x volume vs 30d avg.
-Fo_12,Forex,3951.25,BREAKOUT,Momentum Shift: Fo_12 exhibiting 17.6x volume vs 30d avg.
-Fo_13,Forex,33534.2,BREAKOUT,Momentum Shift: Fo_13 exhibiting 9.3x volume vs 30d avg.
-Fo_14,Forex,4525.21,STABLE,Market conditions within normal liquidity variance.
-Fo_15,Forex,526.18,BREAKOUT,Momentum Shift: Fo_15 exhibiting 2.6x volume vs 30d avg.
+Gold_Spot,Commodities,2420.5,STABLE,Market conditions within normal liquidity variance.
+Crude_Oil,Commodities,78.4,STABLE,Market conditions within normal liquidity variance.
+US_10Y_Yield,Commodities,4.25,STABLE,Market conditions within normal liquidity variance.
+NVDA,AI_Stocks,124.5,STABLE,Market conditions within normal liquidity variance.
+MSFT,AI_Stocks,415.2,STABLE,Market conditions within normal liquidity variance.
+TSLA,AI_Stocks,185.0,STABLE,Market conditions within normal liquidity variance.
+BTC_USD,Crypto,64200.0,STABLE,Market conditions within normal liquidity variance.
+ETH_USD,Crypto,3450.0,STABLE,Market conditions within normal liquidity variance.
+SOL_USD,Crypto,142.1,STABLE,Market conditions within normal liquidity variance.

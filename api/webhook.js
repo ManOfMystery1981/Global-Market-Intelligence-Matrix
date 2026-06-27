@@ -1,7 +1,8 @@
+// api/webhook.js
 import { Octokit } from "@octokit/rest";
 
 const octokit = new Octokit({ auth: process.env.GITHUB_ACCESS_TOKEN });
-const OWNER = "your-github-username";
+const OWNER = "manofmystery1981";
 const REPO = "Global-Market-Intelligence-Matrix";
 const FILE_PATH = "subscribers.json";
 
