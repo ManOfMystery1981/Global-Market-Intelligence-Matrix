@@ -2,7 +2,7 @@ import { Octokit } from "@octokit/rest";
 
 const octokit = new Octokit({ auth: process.env.GITHUB_ACCESS_TOKEN });
 const OWNER = "your-github-username";
-const REPO = "your-repository-name";
+const REPO = "Global-Market-Intelligence-Matrix";
 const FILE_PATH = "subscribers.json";
 
 export default async function handler(req, res) {
