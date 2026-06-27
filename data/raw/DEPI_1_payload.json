@@ -1,0 +1,8 @@
+{
+    "price": 142.1,
+    "volume_24h": 62244953.038421586,
+    "historical_avg_volume": 38045202.58643194,
+    "volatility": 0.3104,
+    "historical_avg_price": 137.74,
+    "source": "CoinGecko API Spot Endpoint"
+}

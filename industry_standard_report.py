@@ -1,11 +1,10 @@
-#!/usr/bin/env python3
 import csv
 import os
 
 class IndustryStandardReport:
     """
-    Visualization Core: Renders structured spreadsheets alongside responsive, 
-    dark-mode terminal interfaces embedded with inline vector charts.
+    Visualization Core: Compiles dense tabular datasets alongside 
+    responsive, dark-mode terminal interfaces embedded with inline vector charts.
     """
     def generate_report(self, playbook, expert_narrative):
         csv_filename = "macro_alpha_dataset.csv"
@@ -17,23 +16,19 @@ class IndustryStandardReport:
                 writer.writeheader()
                 for p in playbook:
                     row_data = {
-                        "ticker": p.get("ticker"),
-                        "category": p.get("category"),
-                        "price": f"{p.get('price'):.2f}",
-                        "trend": p.get("trend"),
-                        "conviction_score": str(p.get("conviction_score")),
-                        "z_score": f"{p.get('z_score', 0.0):.2f}",
+                        "ticker": p.get("ticker"), "category": p.get("category"),
+                        "price": f"{p.get('price'):.2f}", "trend": p.get("trend"),
+                        "conviction_score": str(p.get("conviction_score")), "z_score": f"{p.get('z_score', 0.0):.2f}",
                         "probability_pct": f"{p.get('probability_pct', 50.0):.1f}",
                         "kelly_fraction_pct": f"{p.get('kelly_fraction_pct', 0.0):.1f}"
                     }
                     writer.writerow(row_data)
-            print(f"✅ Quantitative CSV Dataset Exported: {csv_filename}")
         except Exception as e:
             print(f"Error generating CSV: {e}")
 
         rows = ""
         for p in playbook:
-            badge_style = "background:#10b981; color:#0f172a;" if p['trend'] == "BREAKOUT" else "background:#475569; color:#cbd5e1;"
+            badge_style = "background:#10b981; color:#0f172a;" if p['trend'] == "EXTREME_ANOMALY" else "background:#475569; color:#cbd5e1;"
             rows += f"""
             <tr style='border-bottom: 1px solid #334155;'>
                 <td style='padding:12px;'><strong>{p['ticker']}</strong></td>
@@ -42,7 +37,7 @@ class IndustryStandardReport:
                 <td style='padding:12px;'><span style='padding:3px 6px; border-radius:4px; font-weight:bold; font-size:11px; {badge_style}'>{p['trend']}</span></td>
                 <td style='padding:12px; color:#38bdf8;'><code>{p['z_score']:+.2f}</code></td>
                 <td style='padding:12px;'><strong>{p['conviction_score']}/100</strong></td>
-                <td style='padding:12px; color:#10b981;'>{p['kelly_fraction_pct']:.1f}%</td>
+                <td style='padding:12px; color:#10b981;'>{p['probability_pct']:.1f}%</td>
                 <td style='padding:12px; font-size:12px; color:#94a3b8;'>{p['source']}</td>
             </tr>
             """
@@ -82,8 +77,8 @@ class IndustryStandardReport:
                 <h2>📋 Tactical Multi-Factor Ledger</h2>
                 <table>
                     <tr style='background:#0f172a;'>
-                        <th>Asset Key</th><th>Niche Category</th><th>Spot Price</th><th>Signal</th>
-                        <th>Z-Divergence</th><th>Conviction</th><th>Kelly Fraction</th><th>Audit Source</th>
+                        <th>Asset Key</th><th>Niche Category</th><th>Spot Price</th><th>Signal Status</th>
+                        <th>Z-Divergence</th><th>Signal Intensity</th><th>Signal Confidence</th><th>Audit Source</th>
                     </tr>
                     {rows}
                 </table>
@@ -103,16 +98,16 @@ class IndustryStandardReport:
         for a in target_assets:
             z = abs(a.get('z_score', 1.0))
             height = min(int(z * 22), 75)
-            color = "#10b981" if a['trend'] == "BREAKOUT" else "#38bdf8"
+            color = "#10b981" if a['trend'] == "EXTREME_ANOMALY" else "#38bdf8"
             
             svg_blocks += f"""
             <div class="chart-box">
-                <span style='font-size:12px; font-weight:bold; color:#f1f5f9;'>{a['ticker']} Momentum Curve</span>
+                <span style='font-size:12px; font-weight:bold; color:#f1f5f9;'>{a['ticker']} Anomaly Curve</span>
                 <svg width="220" height="90" style="background:#090d16; border-radius:4px; margin-top:10px;">
                     <path d="M10 80 Q 60 {100 - height}, 110 {90 - height} T 210 80" fill="none" stroke="{color}" stroke-width="3"/>
                     <line x1="10" y1="80" x2="210" y2="80" stroke="#334155" stroke-dasharray="3"/>
                     <circle cx="110" cy="{90 - height}" r="4" fill="#f43f5e"/>
-                    <text x="12" y="22" fill="#64748b" font-size="9" font-family="monospace">Conviction: {a['conviction_score']}/100</text>
+                    <text x="12" y="22" fill="#64748b" font-size="9" font-family="monospace">Intensity: {a['conviction_score']}/100</text>
                 </svg>
             </div>
             """
