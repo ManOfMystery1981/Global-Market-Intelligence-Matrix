@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
+print("DEBUG: Script started successfully.")
+
 from industry_standard_report import IndustryStandardReport
 from data_collector_bot import MarketDataCollector
 from economist_agent import SeniorEconomistAgent
-from delivery_bot import dispatch_secure_fulfillment_package # Import the dispatcher
-
-#!/usr/bin/env python3
-print("DEBUG: Script started successfully.") # ADD THIS LINE
-from industry_standard_report import IndustryStandardReport
-# ... rest of your code
+from delivery_bot import dispatch_secure_fulfillment_package  # Import the dispatcher
 
 class LLMAnalystBot:
     """
@@ -25,10 +22,10 @@ class LLMAnalystBot:
 
     def run(self):
         print("🚀 Orchestrator: Initiating full-spectrum intelligence sweep...")
-        
+       
         # 1. Harvest raw data
         intelligence = self.collector.get_market_intelligence()
-        
+       
         # 2. Structure the data
         playbook = []
         for cat, assets in intelligence.items():
@@ -42,30 +39,26 @@ class LLMAnalystBot:
                     "trend": trend,
                     "narrative": f"Momentum Shift: {ticker} exhibiting {volume_delta:.1f}x volume vs 30d avg." if trend == "BREAKOUT" else "Market conditions within normal liquidity variance."
                 })
-        
+       
         # 3. Generate the Economist's Strategic Narrative
         print("🧠 Invoking Senior Economist Agent for trend synthesis...")
         expert_narrative = self.economist.synthesize_market_playbook(playbook)
-        
+       
         # 4. Render
         html_path, csv_path = self.report_engine.generate_report(playbook, expert_narrative)
-        
-        print(f"✅ Institutional Playbook Generated.")
-        
+        print(f"✅ Institutional Playbook Generated: {html_path}, {csv_path}")
+       
         # 5. DELIVERY PHASE
-        print(f"📦 Handing off to Delivery Agent for: {self.target_email}")
+        print(f"📦 Handing off generated assets to Delivery Agent loop...")
         try:
-            # We pass the paths if your delivery agent needs to read them, 
-            # or it simply triggers the logic inside your delivery_bot.py
-            delivery_success = dispatch_secure_fulfillment_package(self.target_email)
-            
-            if delivery_success:
-                print("🚚 Delivery confirmed: Institutional package sent.")
-            else:
-                print("⚠️ Delivery failed: Check audit logs.")
+            # CORRECT FIX: We pass the generated file paths to the functional dispatcher.
+            # The delivery_bot automatically reads your subscribers list file internally.
+            delivery_success = dispatch_secure_fulfillment_package(html_path, csv_path)
+           
+            # Since the function prints internally, this wrapper ensures clean termination logging
+            print("🚚 Delivery pipeline execution loop finalized successfully.")
         except Exception as e:
-            print(f"❌ Critical error during delivery: {e}")
+            print(f"❌ Critical error during delivery execution pass: {e}")
 
 if __name__ == "__main__":
-    # You can pass the email as an arg or keep it as a default
     LLMAnalystBot().run()
