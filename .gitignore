@@ -29,3 +29,14 @@ wget-log*
 backups/
 *.tar.gz
 .env.local
+
+# Ignore all compiled PDF reports
+reports/
+*.pdf
+
+# Ignore localized environment credentials
+.env
+venv/
+__pycache__/
+
+corporate_ledger.db
