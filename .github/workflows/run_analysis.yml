@@ -1,0 +1,35 @@
+name: Autonomous Data Refinery Core Run
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Triggers automatically every 24 hours
+  workflow_dispatch: # Allows you to trigger it manually from GitHub anytime
+
+jobs:
+  build-and-run:
+    runs-size: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Set up Python Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Production Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install google-genai requests
+
+      - name: Execute Analytical Engine Matrix
+        env:
+          # This pulls your secret out of GitHub securely at runtime
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python local-ai/finance/llm_analyst_bot.py
+
+      - name: Broadcast Marketing Teaser
+        run: |
+          python local-ai/finance/marketing_bot.py

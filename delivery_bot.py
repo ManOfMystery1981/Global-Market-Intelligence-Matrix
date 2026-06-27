@@ -28,6 +28,32 @@ from os_data_collector import OSDataCollector
 sys.stdout.reconfigure(line_buffering=True)
 sys.stderr.reconfigure(line_buffering=True)
 
+# Add title page
+def create_title_page(email, report_id):
+    """Create a professional title page."""
+    story = []
+    story.append(Spacer(1, 100))
+    story.append(Paragraph("GLOBAL SOFTWARE INTELLIGENCE", title_style))
+    story.append(Paragraph("& DATA ARBITRAGE REPORT", title_style))
+    story.append(Spacer(1, 50))
+    story.append(Paragraph(f"Prepared For: {email}", subtitle_style))
+    story.append(Paragraph(f"Report ID: {report_id}", body_style))
+    story.append(Paragraph(f"Date: {datetime.now().strftime('%B %d, %Y')}", body_style))
+    story.append(Paragraph("CONFIDENTIAL - INSTITUTIONAL USE ONLY", footer_style))
+    return story
+
+# Add value proposition table
+def create_value_proposition_table():
+    """Create the $5,000 vs $1,000 comparison table."""
+    data = [
+        ['Feature', 'Traditional Consulting ($5,000+)', 'This Report ($1,000)'],
+        ['Onboarding', '2-4 weeks of interviews', 'Instant, automated pipelines'],
+        ['Data Recency', 'Outdated historical sampling', 'Real-time live data'],
+        ['Execution', '3-6 months', '30-day rollout'],
+        ['Access', 'High capital barrier', 'Highly accessible']
+    ]
+    return Table(data, colWidths=[100, 200, 200])
+
 # --- EMAIL VALIDATION ---
 def is_valid_email(email):
     """Validate email address format."""

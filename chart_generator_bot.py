@@ -12,7 +12,30 @@ class ChartGenerator:
     def __init__(self):
         self.chart_images = {}
         self.dark_mode = False
-    
+
+# Use professional color palette
+colors = {
+    'teal_dark': '#004d4d',
+    'teal_medium': '#008080',
+    'teal_light': '#00aaaa',
+    'gold': '#ffd700',
+    'white': '#ffffff',
+    'grey': '#f0f0f0'
+}
+
+def create_professional_chart(data):
+    fig, ax = plt.subplots(figsize=(10, 6))
+    # Apply teal/gold color scheme
+    bars = ax.bar(categories, values, color=['#008080', '#00aaaa', '#ffd700'])
+    # Add value labels
+    for bar in bars:
+        height = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width()/2., height,
+                f'${height:,.0f}',
+                ha='center', va='bottom', fontweight='bold')
+    return fig    
+
+
     def create_crypto_price_chart(self, crypto_data):
         """Create a bar chart of cryptocurrency prices."""
         if not crypto_data:

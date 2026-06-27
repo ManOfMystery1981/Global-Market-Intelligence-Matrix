@@ -29,7 +29,7 @@ on:
 jobs:
   generate-analysis:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 120
 
     steps:
       - name: Checkout Repository
@@ -46,31 +46,43 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run LLM Analyst Bot (Gemini)
+      - name: Install Ollama
+        run: |
+          pkill -f ollama || true
+          sleep 2
+          curl -fsSL https://ollama.com/install.sh | sh
+          ollama serve &
+          sleep 10
+          ollama pull tinyllama:latest
+          ollama list
+
+      - name: Run LLM Analyst Bot
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           CUSTOMER_EMAIL: ${{ github.event.inputs.email || '' }}
           TEST_MODE: ${{ github.event.inputs.test_mode || 'false' }}
+          LLM_API_URL: "http://localhost:11434/api/generate"
+          LLM_MODEL: "tinyllama:latest"
         run: |
           python llm_analyst_bot.py
 
       - name: Generate Full Report
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           CUSTOMER_EMAIL: ${{ github.event.inputs.email || '' }}
           TEST_MODE: ${{ github.event.inputs.test_mode || 'false' }}
           SEND_TEST_COPY: ${{ github.event.inputs.send_test_copy || 'false' }}
         run: |
           EMAIL_TO_SEND="$CUSTOMER_EMAIL"
+          
           if [ "$SEND_TEST_COPY" == "true" ]; then
             EMAIL_TO_SEND="dsull1981@gmail.com"
             echo "🧪 Test copy enabled: Sending to $EMAIL_TO_SEND"
           fi
+          
           if [ -n "$EMAIL_TO_SEND" ]; then
-            echo "📧 Generating PDF for: $EMAIL_TO_SEND"
-            python generate_full_report.py "$EMAIL_TO_SEND"
+            echo "📧 Generating PDF with existing article for: $EMAIL_TO_SEND"
+            python generate_full_report.py $EMAIL_TO_SEND
           else
             echo "⚠️ No email provided. Skipping email delivery."
           fi
@@ -81,6 +93,6 @@ jobs:
           name: generated-reports
           path: |
             analyst_article_*.md
-            Global_Software_Trends_Report*.pdf
+            Global_Software_Trends_Report.pdf
             market_intelligence.md
           retention-days: 30

@@ -1,264 +1,201 @@
+#!/usr/bin/env python3
+"""
+llm_analyst_bot.py
+Generates professional data-arbitrage intelligence reports using the modern Gemini SDK.
+Fully integrated with the unified data_collector_bot.py pipeline.
+"""
 import os
 import sys
-import json
-import requests
-import glob
+import time
 from datetime import datetime
-from typing import Dict, List, Any, Optional
+from google import genai
+from google.genai import types
 
-# Add the current directory to the path
+# Force local directory scanning for pipeline files
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Import data sources with fallbacks
+# ---------------------------------------------------------------------------
+# Pipeline Ingestion & Safe Fallback Definitions
+# ---------------------------------------------------------------------------
 try:
-    from delivery_bot import get_latest_data, get_sample_data, parse_markdown_data
+    from delivery_bot import get_latest_data
 except ImportError:
-    print("⚠️ Could not import from delivery_bot.py, using fallback data functions")
+    print("⚠️  delivery_bot not found — using default trend structures")
     def get_latest_data():
         return {
             'trends': [
                 "AI/ML adoption up 23% year-over-year across enterprise sectors",
                 "Rust usage growing 15% among systems programmers",
-                "Kubernetes remains dominant in cloud orchestration"
+                "Kubernetes remains dominant in cloud orchestration",
+                "TypeScript surpasses Java in new project starts",
+                "Edge computing frameworks see 40% increase in adoption",
             ],
-            'metrics': [
-                {"Total frameworks tracked": "45"},
-                {"Average developer salary": "$145,000"}
-            ],
-            'codebase_stats': {
-                "Languages": "Python, HTML, JavaScript, Shell",
-                "Stars": "0",
-                "Forks": "0"
-            }
+            'metrics': [{"Total frameworks tracked": "45"}],
+            'codebase_stats': {},
         }
-    def get_sample_data():
-        return get_latest_data()
-    def parse_markdown_data(content):
-        return get_latest_data()
 
 try:
     from data_collector_bot import MarketDataCollector
 except ImportError:
-    print("⚠️ Could not import data_collector_bot.py")
+    print("⚠️  data_collector_bot not found — verify path location")
     class MarketDataCollector:
         def collect_all_data(self):
             return {"crypto": {}, "stocks": {}, "indices": {}}
 
-try:
-    from os_data_collector import OSDataCollector
-except ImportError:
-    print("⚠️ Could not import os_data_collector.py")
-    class OSDataCollector:
-        def collect_all_data(self):
-            return {"market_share": {}}
-
-try:
-    from company_data_collector import TechCompanyDataCollector
-except ImportError:
-    print("⚠️ Could not import company_data_collector.py")
-    class TechCompanyDataCollector:
-        def collect_all_data(self):
-            return {"top_100": [], "top_10_by_category": {}, "top_10_innovations": []}
-
+# Import your centralized prompt constructor module
 try:
     from llm_analyst_prompt import generate_arbitrage_section_prompt
 except ImportError:
-    print("⚠️ Could not import llm_analyst_prompt.py, using built-in prompt")
-    def generate_arbitrage_section_prompt(section, *args, **kwargs):
-        return f"Write a data arbitrage section about {section}."
+    raise ImportError("❌ Critical structural failure: llm_analyst_prompt.py is missing from this directory.")
 
 
-class LLMAnalystBot:
-    """Bot that generates data arbitrage reports using segmented generation."""
-    
+# ---------------------------------------------------------------------------
+# Gemini Execution Engine (Modern Client Framework)
+# ---------------------------------------------------------------------------
+class GeminiClient:
+    """Thin wrapper around the modern google.genai SDK Client routing layers."""
+
+    MODEL = "gemini-1.5-flash"  
+    MAX_OUTPUT_TOKENS = 2048
+    TEMPERATURE = 0.4
+
     def __init__(self):
-        self.llm_url = os.environ.get("LLM_API_URL", "http://localhost:11434/api/generate")
-        self.model = os.environ.get("LLM_MODEL", "mistral:7b-instruct-q4_0")
-        self.max_tokens = 2048
-        self.timeout = 600
-        self.segments_per_section = 3
-        
-    def generate_segment(self, prompt: str, segment_name: str, context: str = "") -> str:
-        """Generate a single segment of the article."""
-        full_prompt = prompt
-        if context:
-            full_prompt = f"{prompt}\n\n**Previous context:**\n{context}\n\n**Continue from where you left off:**"
-        
-        payload = {
-            "model": self.model,
-            "prompt": full_prompt,
-            "stream": False,
-            "temperature": 0.5,
-            "max_tokens": self.max_tokens,
-            "num_ctx": 4096,
-            "system": "You are a Quantitative Data Arbitrage Analyst. Output only actionable spreads and execution strategies."
-        }
-        
-        try:
-            print(f"📝 Generating segment: {segment_name}...")
-            session = requests.Session()
-            response = session.post(
-                self.llm_url,
-                json=payload,
-                timeout=(30, self.timeout)
+        api_key = os.environ.get("GEMINI_API_KEY", "")
+        if not api_key:
+            raise EnvironmentError(
+                "GEMINI_API_KEY is not set inside the runner environment. "
+                "Add it as a GitHub Actions secret named GEMINI_API_KEY."
             )
-            
-            if response.status_code == 200:
-                data = response.json()
-                content = data.get("response", "")
-                if content:
-                    print(f"✅ {segment_name} complete ({len(content)} characters).")
-                    return content
-                else:
-                    print(f"⚠️ Empty response for {segment_name}")
-                    return ""
-            else:
-                print(f"❌ LLM error for {segment_name}: {response.status_code}")
-                return ""
-        except requests.exceptions.Timeout:
-            print(f"❌ Timeout for {segment_name} after {self.timeout}s")
-            return ""
-        except Exception as e:
-            print(f"❌ LLM error for {segment_name}: {e}")
-            return ""
-    
-    def generate_section_with_segments(self, section_name: str, prompt_func, data: Dict) -> str:
-        """Generate a complete section using multiple segments."""
-        print(f"\n📝 Generating section: {section_name}")
+        # Instantiate the official unified client object
+        self.client = genai.Client(api_key=api_key)
         
-        prompt = prompt_func(section_name, data)
-        full_section = ""
-        segment_count = 0
-        context = ""
-        
-        for i in range(self.segments_per_section):
-            segment_name = f"{section_name} (Segment {i+1}/{self.segments_per_section})"
-            
-            segment = self.generate_segment(prompt, segment_name, context)
-            
-            if segment:
-                full_section += segment + "\n\n"
-                segment_count += 1
-                context = full_section[-2000:]
-                print(f"📊 {section_name}: {len(full_section)} characters so far")
+        # Structure the modern system configuration block
+        self.config = types.GenerateContentConfig(
+            temperature=self.TEMPERATURE,
+            max_output_tokens=self.MAX_OUTPUT_TOKENS,
+            system_instruction=(
+                "You are a Senior Quantitative Data Arbitrage Analyst writing for a "
+                "professional institutional investment newsletter. "
+                "Output ONLY the requested content — never echo back instructions, "
+                "formatting rules, or section headings that were provided in the prompt. "
+                "Write in perfect American English. Use round bullet points (•) for lists. "
+                "Be precise with numbers and cite every data point you reference."
+            )
+        )
+
+    def generate(self, prompt: str, section_label: str, retries: int = 3) -> str:
+        """Calls the modern client execution layer to extract text payloads safely."""
+        for attempt in range(1, retries + 1):
+            try:
+                print(f"  📡 Calling Gemini for [{section_label}] (attempt {attempt})…")
                 
-                prompt = f"""
-Continue the {section_name} section of the data arbitrage report.
+                # Modern SDK routing execution syntax
+                response = self.client.models.generate_content(
+                    model=self.MODEL,
+                    contents=prompt,
+                    config=self.config
+                )
+                
+                text = response.text.strip()
+                print(f"  ✅ [{section_label}] — {len(text)} chars")
+                return text
+            except Exception as exc:
+                print(f"  ⚠️  Gemini client layer error (attempt {attempt}/{retries}): {exc}")
+                if attempt < retries:
+                    time.sleep(5 * attempt)
+        print(f"  ❌ All {retries} production attempts failed for [{section_label}]")
+        return ""
 
-**Context from previous segments:**
-{context}
 
-**Continue writing the {section_name} section.**
-- Maintain the same sharp, math-driven, authoritative tone
-- Add more specific spreads and execution strategies
-- This is segment {i+2} of {self.segments_per_section}
-"""
-            else:
-                print(f"⚠️ Empty segment, stopping early for {section_name}")
-                break
-        
-        print(f"✅ {section_name} complete: {len(full_section)} characters, {segment_count} segments")
-        return full_section
-    
-    def run_analysis(self) -> str:
-        """Main method to collect data and generate the report."""
-        print("🔵 Starting LLM Analyst Bot with segmented generation...")
-        
-        # Collect all data
-        print("📊 Gathering data...")
+# ---------------------------------------------------------------------------
+# Main Controller Execution Layer
+# ---------------------------------------------------------------------------
+class LLMAnalystBot:
+    def __init__(self):
+        self.client = GeminiClient()
+
+    def _collect_data(self) -> dict:
+        print("📊 Instantiating data pipeline ingestion matrices…")
+        data: dict = {}
+
         try:
-            data = get_latest_data()
-            trend_data = data.get('trends', [])
-            metrics_data = data.get('metrics', [])
+            base = get_latest_data()
+            data['trend_data']   = base.get('trends', [])
+            data['metrics_data'] = base.get('metrics', [])
         except Exception as e:
-            print(f"⚠️ Error getting market data: {e}")
-            trend_data = []
-            metrics_data = []
-        
-        print("📈 Gathering financial data...")
+            print(f"  ⚠️  Trend layer aggregation data error: {e}")
+            data['trend_data']   = []
+            data['metrics_data'] = []
+
         try:
-            collector = MarketDataCollector()
-            market_data = collector.collect_all_data()
-            crypto_data = market_data.get('crypto', {})
-            stock_data = market_data.get('stocks', {})
+            market = MarketDataCollector().collect_all_data()
+            data['crypto_data'] = market.get('crypto', {})
+            data['stock_data']  = market.get('stocks', {})
+            
+            # Map parameters cleanly into the keys expected by llm_analyst_prompt.py
+            data['os_data']      = market.get('os_market_share', {})
+            data['company_data'] = market.get('company_metrics', {})
+            data['market_data']  = market
         except Exception as e:
-            print(f"⚠️ Error getting financial data: {e}")
-            crypto_data = {}
-            stock_data = {}
-        
-        print("💻 Gathering OS data...")
-        try:
-            os_collector = OSDataCollector()
-            os_data = os_collector.collect_all_data()
-        except Exception as e:
-            print(f"⚠️ Error getting OS data: {e}")
-            os_data = {}
-        
-        print("🏢 Gathering tech company data...")
-        try:
-            company_collector = TechCompanyDataCollector()
-            company_data = company_collector.collect_all_data()
-        except Exception as e:
-            print(f"⚠️ Error getting company data: {e}")
-            company_data = {}
-        
-        all_data = {
-            'trend_data': trend_data,
-            'metrics_data': metrics_data,
-            'crypto_data': crypto_data,
-            'stock_data': stock_data,
-            'os_data': os_data,
-            'company_data': company_data,
-            'market_data': market_data if 'market_data' in locals() else {}
-        }
-        
-        # Generate each arbitrage section
-        sections = []
-        section_names = [
-            "Executive Arbitrage Summary",
-            "Regional SaaS Arbitrage",
-            "API Latency Arbitrage",
-            "Crypto Arbitrage Spread",
-            "Data Arbitrage Execution Vectors"
+            print(f"  ⚠️  Market data extraction error: {e}")
+            data['crypto_data'] = {}
+            data['stock_data']  = {}
+            data['os_data']     = {}
+            data['company_data'] = {}
+
+        return data
+
+    def run_analysis(self):
+        print("🔵 LLM Analyst Bot — Pipeline Ingestion Activated")
+        raw_payload = self._collect_data()
+
+        # Define map blocks for clear execution handoffs
+        sections_to_generate = [
+            ("Executive Arbitrage Summary", "executive_arbitrage_summary"),
+            ("Regional SaaS Arbitrage", "regional_saas_arbitrage"),
+            ("API Latency Arbitrage", "api_latency_arbitrage"),
+            ("Crypto Arbitrage Spread", "crypto_arbitrage_spread"),
+            ("Data Arbitrage Execution Vectors", "data_arbitrage_execution")
         ]
-        
-        for section_name in section_names:
-            section_content = self.generate_section_with_segments(
-                section_name,
-                lambda s, d: generate_arbitrage_section_prompt(
-                    s.replace(" ", "_").lower(),
-                    d.get('trend_data', []),
-                    d.get('metrics_data', []),
-                    d.get('crypto_data', {}),
-                    d.get('stock_data', {}),
-                    d.get('os_data', {}),
-                    d.get('company_data', {}),
-                    d.get('market_data', {})
-                ),
-                all_data
+
+        sections = []
+        for section_title, prompt_key in sections_to_generate:
+            print(f"\n📝 Compiling Matrix Analytics for: {section_title}")
+            
+            # Route inputs cleanly through the imported prompt framework
+            prompt = generate_arbitrage_section_prompt(
+                section=prompt_key,
+                trend_data=raw_payload.get('trend_data', []),
+                metrics_data=raw_payload.get('metrics_data', []),
+                crypto_data=raw_payload.get('crypto_data', {}),
+                stock_data=raw_payload.get('stock_data', {}),
+                os_data=raw_payload.get('os_data', {}),
+                company_data=raw_payload.get('company_data', {}),
+                market_data=raw_payload.get('market_data', {})
             )
-            if section_content:
-                sections.append((section_name, section_content))
-        
-        # Combine all sections
-        full_article = ""
-        for section_name, section_content in sections:
-            if section_content:
-                full_article += f"## {section_name}\n\n"
-                full_article += section_content
-                full_article += "\n\n---\n\n"
-        
-        # Save the article
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        article_file = f"analyst_article_{timestamp}.md"
-        
-        with open(article_file, 'w') as f:
-            f.write(f"# Data Arbitrage Intelligence Report\n\n")
-            f.write(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}\n\n")
+            
+            content = self.client.generate(prompt, section_title)
+            if content:
+                sections.append((section_title, content))
+            else:
+                print(f"  ⚠️  Skipping execution block for: {section_title}")
+
+        # Assemble the clean text sections
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M UTC")
+        article_parts = [
+            f"# Data Arbitrage Intelligence Report\n\n**Generated:** {timestamp}\n",
+        ]
+        for name, content in sections:
+            article_parts.append(f"\n## {name}\n\n{content}\n\n---\n")
+
+        full_article = "\n".join(article_parts)
+
+        # Write output matrix payload to disk
+        fname = f"analyst_article_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+        with open(fname, "w", encoding="utf-8") as f:
             f.write(full_article)
-        
-        file_size = os.path.getsize(article_file)
-        print(f"\n✅ Full article saved to {article_file} ({file_size} bytes)")
+
+        print(f"\n✅ Generation pipeline complete. Output file saved → {fname}")
         return full_article
 
 

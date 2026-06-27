@@ -9,11 +9,8 @@ jobs:
   google-indexing:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
       - name: Google Indexing
         uses: robingenz/google-indexing-action@main
         with:
-          siteUrl: 'https://manofmystery1981.github.io/global-software-trends/'
+          siteUrl: 'manofmystery1981.github.io'
           gcpServiceAccountKey: ${{ secrets.GCP_SA_KEY }}
