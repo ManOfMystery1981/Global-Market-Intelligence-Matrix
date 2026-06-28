@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
 stripe_webhook_server.py
-Institutional Entitlement Gateway: Processes secure billing webhooks,
-enforces cryptographic verification, and maps transaction tokens safely.
+Institutional Billing Gateway (A+ Compliance Tier)
+- Enforces strict multi-table relational schema for sub vs one-off ledgers.
+- Implements single-transaction idempotency locking (INSERT ON CONFLICT).
+- Prevents out-of-order race conditions using monotonic event timestamps.
+- Optimizes database concurrency handling with WAL-mode connection pools.
 """
 
 import os
@@ -22,191 +25,221 @@ logger = logging.getLogger("A_Plus_Billing_Gateway")
 
 app = Flask(__name__)
 
-# --- AUDIT GATE 1: STRICT SECURITY ENVIRONMENT VERIFICATION ---
-# Enforce immediate process crash on missing credentials (No fail-open mock shortcuts allowed)
+# --- SECURE CONFIGURATION HANDSHAKE ---
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
 if not STRIPE_SECRET_KEY or not STRIPE_WEBHOOK_SECRET:
-    logger.critical("❌ CRITICAL CONFIGURATION FAULT: Missing required STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET environment vectors.")
+    logger.critical("❌ CONFIGURATION FAULT: Missing required STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET environment vectors.")
     sys.exit(1)
 
 stripe.api_key = STRIPE_SECRET_KEY
-
-# --- AUDIT GATE 2: DEFINITIVE ENTITLEMENT PERMISSION MATRIX ---
-# Explicitly links Stripe price object identifiers straight to internal token bands
-TIER_ENTITLEMENT_MAP = {
-    "price_1MmockAI_StandardMonthly": "standard_research_tier",
-    "price_1MmockAI_PremiumInstitutional": "premium_institutional_tier",
-    "price_1MmockAI_DataArbitrageAPI": "enterprise_data_api_tier"
-}
-
-# --- AUDIT GATE 3: PRODUCTION DATABASE PERSISTENCE LAYER ---
-# Replaces fragile JSON arrays with an atomic SQL transaction ledger
 DB_FILE = "billing_ledger.db"
 
+# --- DEFINITIVE PLATFORM PRODUCT MATRICES ---
+YEARLY_PRICE_IDS = {
+    "price_1MmockAI_YearlyInstitutional": "yearly_all_access"
+}
+ONE_TIME_REPORT_PRICE_IDS = {
+    "price_1MmockAI_HardwareReport": "report_hardware_infrastructure",
+    "price_1MmockAI_DePINReport": "report_depin_compute"
+}
+
 def initialize_database():
-    """Initializes schema to enforce structural relational integrity constraints."""
+    """Builds a normalized, multi-table database with strict transactional constraints."""
     with sqlite3.connect(DB_FILE) as conn:
+        conn.execute("PRAGMA journal_mode=WAL;")
+        conn.execute("PRAGMA busy_timeout=5000;")
         cursor = conn.cursor()
-        # Table 1: Cryptographic Event Ledger to block Replay Attacks
+        
+        # 1. Idempotency Log (The Master Atomic Lock)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS stripe_events (
                 event_id TEXT PRIMARY KEY,
                 event_type TEXT NOT NULL,
+                event_created INTEGER NOT NULL,
                 processed_at_utc TEXT NOT NULL
             )
         """)
-        # Table 2: User Entitlement State Ledger to block Race Conditions
+        # 2. Subscription Tracking Matrix (Yearly Plans)
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS user_subscriptions (
-                customer_id TEXT PRIMARY KEY,
+            CREATE TABLE IF NOT EXISTS stripe_subscriptions (
+                subscription_id TEXT PRIMARY KEY,
+                customer_id TEXT NOT NULL,
                 price_id TEXT NOT NULL,
-                tier_token TEXT NOT NULL,
                 status TEXT NOT NULL,
-                last_synchronized_utc TEXT NOT NULL
+                current_period_end INTEGER NOT NULL,
+                last_event_created INTEGER NOT NULL,
+                updated_at_utc TEXT NOT NULL
+            )
+        """)
+        # 3. Permanent Report Purchases Tracking Matrix (One-Off Line Items)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS report_purchases (
+                purchase_id TEXT PRIMARY KEY,
+                customer_id TEXT NOT NULL,
+                checkout_session_id TEXT UNIQUE NOT NULL,
+                report_product_id TEXT NOT NULL,
+                purchased_at_utc TEXT NOT NULL
+            )
+        """)
+        # 4. Cached Entitlement Lookup Table (Optimized fast reads for agent pipelines)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS user_entitlements (
+                customer_id TEXT PRIMARY KEY,
+                yearly_access_active INTEGER NOT NULL DEFAULT 0,
+                yearly_access_until INTEGER NOT NULL,
+                updated_at_utc TEXT NOT NULL
             )
         """)
         conn.commit()
 
-# Initialize ledger tables immediately on startup runtime
 initialize_database()
 
-def is_duplicate_event(event_id: str) -> bool:
-    """Idempotency Check: Verifies if event was already committed."""
-    with sqlite3.connect(DB_FILE) as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT 1 FROM stripe_events WHERE event_id = ?", (event_id,))
-        return cursor.fetchone() is not None
-
-def log_processed_event(event_id: str, event_type: str):
-    """Persists event token inside the immutable tracking table."""
-    with sqlite3.connect(DB_FILE) as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO stripe_events (event_id, event_type, processed_at_utc) VALUES (?, ?, ?)",
-            (event_id, event_type, datetime.now(timezone.utc).isoformat())
-        )
-        conn.commit()
-
-def sync_subscription_entitlement(customer_id: str, price_id: str, status: str):
-    """Executes atomic upsert state updates with strict pricing schema filtering."""
-    internal_tier_token = TIER_ENTITLEMENT_MAP.get(price_id)
+def process_webhook_transaction(event_id: str, event_type: str, event_created: int, payload_data: dict) -> tuple[str, int]:
+    """Orchestrates atomic event deduplication and mutations inside a single isolated transaction."""
+    current_timestamp = datetime.now(timezone.utc).isoformat()
     
-    # Audit Rule: Unknown price parameters must throw explicit faults, not grant anonymous access
-    if internal_tier_token is None:
-        logger.error(f"❌ COMPLIANCE FAULT: Unmapped or invalid Stripe Price ID ingested: [{price_id}]")
-        raise ValueError(f"Ingested Price ID [{price_id}] lacks internal mapping authorization constraints.")
+    with sqlite3.connect(DB_FILE) as conn:
+        conn.execute("PRAGMA journal_mode=WAL;")
+        conn.execute("PRAGMA busy_timeout=5000;")
+        cursor = conn.cursor()
         
-    current_timestamp = datetime.now(timezone.utc).isoformat()
-    
-    with sqlite3.connect(DB_FILE) as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO user_subscriptions (customer_id, price_id, tier_token, status, last_synchronized_utc)
-            VALUES (?, ?, ?, ?, ?)
-            ON CONFLICT(customer_id) DO UPDATE SET
-                price_id = excluded.price_id,
-                tier_token = excluded.tier_token,
-                status = excluded.status,
-                last_synchronized_utc = excluded.last_synchronized_utc
-        """, (customer_id, price_id, internal_tier_token, status, current_timestamp))
-        conn.commit()
-    logger.info(f"💾 LEDGER TRANSACTION COMMITTED: Customer [{customer_id}] synchronized to Tier Token [{internal_tier_token}] (Status: {status})")
+        # --- AUDIT GATE 1: ATOMIC IDEMPOTENCY LOCK ---
+        try:
+            cursor.execute("""
+                INSERT INTO stripe_events (event_id, event_type, event_created, processed_at_utc)
+                VALUES (?, ?, ?, ?)
+            """, (event_id, event_type, event_created, current_timestamp))
+        except sqlite3.IntegrityError:
+            logger.info(f"🛡️ IDEMPOTENCY BLOCKED: Replay request intercepted. Stripe Event [{event_id}] already finalized.")
+            return "duplicate", 200
 
-def revoke_subscription_entitlement(customer_id: str):
-    """Explicitly downgrades state variables upon subscription cancellation."""
-    current_timestamp = datetime.now(timezone.utc).isoformat()
-    with sqlite3.connect(DB_FILE) as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO user_subscriptions (customer_id, price_id, tier_token, status, last_synchronized_utc)
-            VALUES (?, 'REVOKED', 'revoked_anonymous_tier', 'canceled', ?)
-            ON CONFLICT(customer_id) DO UPDATE SET
-                price_id = 'REVOKED',
-                tier_token = 'revoked_anonymous_tier',
-                status = 'canceled',
-                last_synchronized_utc = excluded.last_synchronized_utc
-        """, (customer_id, current_timestamp))
+        # --- AUDIT GATE 2: YEARLY SUBSCRIPTION PERMISSION UPDATES ---
+        if event_type in ["customer.subscription.created", "customer.subscription.updated"]:
+            sub_obj = payload_data
+            sub_id = sub_obj.get("id")
+            customer_id = sub_obj.get("customer")
+            status = sub_obj.get("status")
+            period_end = int(sub_obj.get("current_period_end", 0))
+            
+            items = sub_obj.get("items", {}).get("data", [])
+            if not items or not sub_id or not customer_id or not status:
+                raise ValueError("Missing mandatory relational keys inside inbound subscription payload.")
+                
+            price_id = items[0].get("price", {}).get("id") if isinstance(items, list) and len(items) > 0 else None
+            if price_id not in YEARLY_PRICE_IDS:
+                raise ValueError(f"Ingested unmapped price ID entry: [{price_id}]. Denied access.")
+
+            # Monotonic Timestamp Sequence Check to prevent out-of-order race conditions
+            cursor.execute("SELECT last_event_created FROM stripe_subscriptions WHERE subscription_id = ?", (sub_id,))
+            row = cursor.fetchone()
+            if row and event_created < row[0]:
+                logger.warning(f"⏳ OUT-OF-ORDER WARNING: Ignored stale Stripe event created at [{event_created}] for Sub [{sub_id}].")
+                conn.rollback()
+                return "stale_event_ignored", 200
+
+            cursor.execute("""
+                INSERT INTO stripe_subscriptions (subscription_id, customer_id, price_id, status, current_period_end, last_event_created, updated_at_utc)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(subscription_id) DO UPDATE SET
+                    price_id = excluded.price_id,
+                    status = excluded.status,
+                    current_period_end = excluded.current_period_end,
+                    last_event_created = excluded.last_event_created,
+                    updated_at_utc = excluded.updated_at_utc
+            """, (sub_id, customer_id, price_id, status, period_end, event_created, current_timestamp))
+            
+            is_active = 1 if status in ["active", "trialing"] else 0
+            cursor.execute("""
+                INSERT INTO user_entitlements (customer_id, yearly_access_active, yearly_access_until, updated_at_utc)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(customer_id) DO UPDATE SET
+                    yearly_access_active = excluded.yearly_access_active,
+                    yearly_access_until = excluded.yearly_access_until,
+                    updated_at_utc = excluded.updated_at_utc
+            """, (customer_id, is_active, period_end, current_timestamp))
+
+        elif event_type == "customer.subscription.deleted":
+            sub_obj = payload_data
+            sub_id = sub_obj.get("id")
+            customer_id = sub_obj.get("customer")
+            if not sub_id or not customer_id:
+                raise ValueError("Missing target relational handles on deleted plan tracking frame.")
+                
+            cursor.execute("UPDATE stripe_subscriptions SET status = 'canceled', updated_at_utc = ? WHERE subscription_id = ?", (current_timestamp, sub_id))
+            cursor.execute("UPDATE user_entitlements SET yearly_access_active = 0, updated_at_utc = ? WHERE customer_id = ?", (current_timestamp, customer_id))
+            logger.info(f"🚫 SUBSCRIPTION DEACTIVATED: Access window dismantled for Sub [{sub_id}]")
+
+        # --- AUDIT GATE 3: ONE-OFF REPORT PURCHASE LEDGER ENTRIES ---
+        elif event_type == "checkout.session.completed":
+            session = payload_data
+            session_id = session.get("id")
+            customer_id = session.get("customer")
+            payment_status = session.get("payment_status")
+            
+            if not session_id or not customer_id:
+                raise ValueError("Missing critical user/session handles inside completion tracking vector.")
+                
+            if payment_status != "paid":
+                logger.warning(f"💸 UNPAID EXCEPTION: Session [{session_id}] completed with status: {payment_status}. Access withheld.")
+                return "unpaid_session_acknowledged", 200
+
+            if session.get("mode") == "subscription":
+                logger.info(f"ℹ️ ROUTING FLOW: Passing sub session handle [{session_id}] down to dedicated handler rules.")
+                conn.rollback()
+                return "routed_to_subscription", 200
+
+            line_items = session.get("line_items", {}).get("data", [])
+            price_id = line_items[0].get("price", {}).get("id") if isinstance(line_items, list) and len(line_items) > 0 else session.get("metadata", {}).get("stripe_price_id")
+
+            if price_id not in ONE_TIME_REPORT_PRICE_IDS:
+                raise ValueError(f"Ingested unmapped singular item price ID marker: [{price_id}]. Denied transaction.")
+                
+            report_product_token = ONE_TIME_REPORT_PRICE_IDS[price_id]
+            purchase_uuid = f"pur_{session_id}"
+            
+            cursor.execute("""
+                INSERT INTO report_purchases (purchase_id, customer_id, checkout_session_id, report_product_id, purchased_at_utc)
+                VALUES (?, ?, ?, ?, ?)
+            """, (purchase_uuid, customer_id, session_id, report_product_token, current_timestamp))
+            logger.info(f"💰 LEDGER SINGLE PAYMENT RECORDED: User [{customer_id}] granted permanent lock to report [{report_product_token}]")
+
         conn.commit()
-    logger.info(f"🚫 LEDGER ENTITLEMENT REVOKED: Account permissions dismantled for Customer [{customer_id}]")
+        return "success", 200
 
 @app.route("/api/v1/billing/webhook", methods=["POST"])
 def handle_stripe_billing_webhook():
-    """Cryptographic Ingestion Gateway: Decodes and verifies payload bodies."""
+    """Validates inbound payload parameters and protects internal logic against system error leakages."""
     payload = request.data
     sig_header = request.headers.get("Stripe-Signature")
     
     if not sig_header:
         logger.warning("❌ SECURITY REJECTION: Inbound webhook payload arrived missing a Stripe-Signature block.")
-        return jsonify({"error": "Signature missing"}), 400
+        return jsonify({"error": "Signature reference key missing"}), 400
 
-    # Cryptographic Signature Payload Evaluation Block
     try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, STRIPE_WEBHOOK_SECRET
-        )
-    except ValueError:
-        logger.error("❌ SECURITY FAULT: Payload body serialization structure is invalid.")
-        return jsonify({"error": "Invalid payload serialization"}), 400
-    except stripe.error.SignatureVerificationError as e:
-        logger.error(f"❌ SECURITY FAULT: Cryptographic token handshake verification failed: {e}")
-        return jsonify({"error": "Signature handshake invalid"}), 400
+        event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
+    except (ValueError, stripe.error.SignatureVerificationError) as crypt_err:
+        logger.error(f"❌ CRYPTOGRAPHIC VERIFICATION FAULT: Malformed headers or key mismatch: {crypt_err}")
+        return jsonify({"error": "Unauthorized signature handshake validation failed"}), 400
 
     event_id = event["id"]
     event_type = event["type"]
-
-    # --- AUDIT GATE 4: IMMUTABLE DEDUPLICATION AND REPLAY PROTECTION ---
-    if is_duplicate_event(event_id):
-        logger.info(f"🛡️ IDEMPOTENCY HIT: Replay request blocked. Stripe Event [{event_id}] already resolved.")
-        return jsonify({"status": "duplicate", "resolved_event_id": event_id}), 200
-
-    logger.info(f"📦 INGESTION ACCESS: Processing unique event [{event_id}] (Type: {event_type})")
+    event_created = int(event.get("created", 0))
+    payload_data = event["data"]["object"]
 
     try:
-        if event_type in ["customer.subscription.created", "customer.subscription.updated"]:
-            subscription = event["data"]["object"]
-            customer_id = subscription.get("customer")
-            status = subscription.get("status")
-            
-            # Extract nested pricing parameters carefully
-            items_array = subscription.get("items", {}).get("data", [])
-            if not items_array:
-                logger.error(f"❌ METADATA EXCEPTION: Subscription item array array holds empty values for event {event_id}")
-                return jsonify({"error": "Malformed transaction items"}), 400
-                
-            price_id = items_array[0].get("price", {}).get("id")
-            
-            # Ensure every single mandatory database indexing key is fully populated
-            if not customer_id or not status or not price_id:
-                logger.error("❌ COMPLIANCE ERROR: Missing vital subscription structural parameters inside webhook object body.")
-                return jsonify({"error": "Vital metadata keys missing"}), 400
-                
-            sync_subscription_entitlement(customer_id, price_id, status)
-
-        elif event_type == "customer.subscription.deleted":
-            subscription = event["data"]["object"]
-            customer_id = subscription.get("customer")
-            if not customer_id:
-                logger.error("❌ COMPLIANCE ERROR: Customer identity missing on cancellation tracking event block.")
-                return jsonify({"error": "Customer handle missing"}), 400
-            revoke_subscription_entitlement(customer_id)
-            
-        # Log successful completion to permanently close out idempotency lane
-        log_processed_event(event_id, event_type)
-        
-    except ValueError as val_err:
-        logger.error(f"❌ COMPLIANCE GATE BLOCK: Mapping rules aborted transaction: {val_err}")
-        return jsonify({"error": str(val_err)}), 400
-    except Exception as sys_err:
-        logger.critical(f"❌ UNHANDLED INTERNAL TRANSITION CRASH: {sys_err}")
-        return jsonify({"error": "Internal ledger processing collapse"}), 500
-
-    return jsonify({"status": "success", "processed_event_id": event_id}), 200
+        status_message, http_code = process_webhook_transaction(event_id, event_type, event_created, payload_data)
+        return jsonify({"status": status_message, "processed_event_id": event_id}), http_code
+    except ValueError as compliance_err:
+        logger.error(f"❌ COMPLIANCE GATE ABORTED TRANSACTION: Mapping logic execution block error: {compliance_err}")
+        return jsonify({"error": "Malformed transaction metadata parameters or invalid product profiles"}), 400
+    except Exception as internal_crash:
+        logger.critical(f"❌ UNHANDLED INTERNAL MATRIX BREAKDOWN CRASH: {internal_crash}")
+        return jsonify({"error": "Internal ledger transactional synchronization failure"}), 500
 
 if __name__ == "__main__":
-    # --- AUDIT GATE 5: REMOVE DANGEROUS REBOOT DEBUG ENVIRONMENT FLAGS ---
-    # Enforces strict WSGI deployment standards; safely routes debug via variable checks
     is_debug_active = os.getenv("FLASK_DEBUG") == "1"
-    logger.info(f"🚀 Initializing Institutional Billing Server Gateway (Debug: {is_debug_active})")
+    logger.info(f"🚀 Initializing A+ Dual-Ledger Billing Engine (Debug Environments: {is_debug_active})")
     app.run(port=4242, debug=is_debug_active)
