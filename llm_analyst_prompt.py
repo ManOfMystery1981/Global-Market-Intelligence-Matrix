@@ -1,41 +1,29 @@
 #!/usr/bin/env python3
-import json
+"""
+llm_analyst_prompt.py
+Institutional Quality Matrix: Enforces strict source-locked generation contracts.
+Removes all freeform speculative writing capabilities from active agent pipelines.
+"""
 
-def generate_arbitrage_section_prompt(section, trend_data, metrics_data, crypto_data, stock_data, os_data, company_data, market_data=None):
-    quality_rules = """
-• DO NOT include introductory filler like "Here is your report" — write prose directly.
-• DO NOT include code blocks, raw markdown formatting arrows, or JSON text.
-• WRITE in an authoritative, clinical tone, exactly like a Wall Street quantitative analyst.
-• CITATION REQUIREMENT: You must explicitly cite the raw values and timestamps provided in the context."""
-
-    if section == "executive_arbitrage_summary":
-        return f"Context: Analyze the following anomaly data layout: {str(trend_data[:5])}. Task: Write the Executive Intelligence Thesis and Core Synthesis. Target: 300 words. Rules: {quality_rules}"
-    elif section == "regional_saas_arbitrage":
-        return f"Context: Evaluate regional compute differences. Task: Write the Infrastructure Constraint Analysis. Target: 300 words. Rules: {quality_rules}"
-    elif section == "api_latency_arbitrage":
-        return f"Context: Evaluate network speeds. Task: Write the Semiconductor & API Supply Chain Latency analysis. Target: 300 words. Rules: {quality_rules}"
-    elif section == "crypto_arbitrage_spread":
-        return f"Context: Alternative flow logs: {str(crypto_data)}. Task: Write the DePIN and High-Compute Liquid Token Flow Analysis. Target: 300 words. Rules: {quality_rules}"
-    else:
-        return f"Context: Process execution constraints. Task: Write the Algorithmic Strategy & Risk Mitigation section. Target: 300 words. Rules: {quality_rules}"
-
-def get_hedge_fund_advisor_prompt(crypto_data, stock_data, company_data):
+def get_compliance_rules_template() -> str:
+    """Returns the non-negotiable compilation directives for LLM consumers."""
     return """
-Task: Write the Institutional Capital Allocation Directives page. Target: 400 words. 
-Instructions: Outline specific capital thresholds, rebalancing orders, and risk limits based on the statistical indicators. Avoid general trading advice or filler.
+CRITICAL COMPLIANCE ACCESS RULES:
+1. USE ONLY FACTS FROM THE ATTACHED APPROVED_CLAIM_LEDGER. You are strictly restricted to processing pre-authorized parameters.
+2. EVERY SINGLE FACTUAL OR DECLARATIVE SENTENCE MUST INCLUDE AT LEAST ONE VALID FACT ID (e.g., [SOURCEKEY_YYYY_MM_DD_PACKETNNN_FNN]).
+3. DO NOT introduce outside statistics, historical dates, percentages, corporate entities, prices, or unanchored causal claims.
+4. If the ledger is insufficient to construct an academic argument for a section, you MUST write exactly: INSUFFICIENT_LEDGER_SUPPORT.
+5. All interpretive or forward-looking sentences must be explicitly prefixed with either [INTERPRETATION] or [HYPOTHESIS] tags.
 """
 
-def get_academic_economist_synopsis_prompt(playbook_data):
-    return f"""
-Task: Write a rigorous Academic Macroeconomic Research Paper Synopsis analyzing these cross-asset metrics: {str(playbook_data[:8])}.
-Target: 600 words.
-Structure Requirements (You must use these headings):
-<h3>I. MACROECONOMIC DIVERGENCE FOUNDATIONS</h3>
-<h3>II. THEOREMS FOR WEALTH MULTIPLICATION & PREDICTIVE ODDS</h3>
-<h3>III. INFRASTRUCTURAL PITFALLS, THESIS INVALIDATION & RISK INSULATION</h3>
+def get_academic_structure_blueprint() -> str:
+    """Returns the mandatory skeletal structure required for publication-grade layout."""
+    return """
+MANDATORY REPORT FORMATTING SCHEMA:
+- Abstract: Concise summary of thesis pillars and raw selection parameters.
+- Section I: Introduction & Macro Formulation (Defines incentives and friction).
+- Section II: Literature & Source Provenance Review (Analyzes source tiers and autoridad).
+- Section III: Quantitative Methodology Framework (Defines z-score thresholds and defaults).
+- Section IV: Core Analysis & Evidence Pillars (Every declarative line must hold valid Fact ID brackets).
+- Section V: Counterarguments & Conflicting Signals (Highlights data friction explicitly).
 """
-
-def format_crypto_arbitrage(d): return "Crypto metrics operational."
-def format_stock_arbitrage(d): return "Equity metrics operational."
-def format_company_arbitrage(d): return "Corporate metrics operational."
-def format_os_data(d): return "Infrastructural loops operational."
