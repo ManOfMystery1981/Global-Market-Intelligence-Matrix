@@ -6,8 +6,11 @@ from signal_engine import generate_signal
 
 # REGRESSION LOCK CONSTANTS (Enforces absolute logic preservation)
 GOLDEN_INPUT_HASH = "sha256:ffd40cfb5dc399f541fb03bf07573de059c21b1935a8abe0841af69e3b16fa6d"
-GOLDEN_OUTPUT_HASH = "sha256:384200c8da4d182a4e56b7c106f00217bbe05ddef8c90914310f53d6df572e1d" # Replace with the output hash from Step 1
+GOLDEN_OUTPUT_HASH = "sha256:c3df6f26cb439d64dbeb63d6b3bd77b2948c455d79ab35def0b37244aa7c98d8"
 GOLDEN_COMPOSITE_SCORE = 66.44
+GOLDEN_OUTPUT_HASH = "sha256:c3df6f26cb439d64dbeb63d6b3bd77b2948c455d79ab35def0b37244aa7c98d8"
+GOLDEN_COMPOSITE_SCORE = 66.44
+
 
 GOLDEN_FACTOR_SCORES = {
     "price_momentum": 58.63,
@@ -16,7 +19,6 @@ GOLDEN_FACTOR_SCORES = {
     "research_attention": 53.98,
     "risk_adjustment": 73.75
 }
-
 
 class TestSignalEngineReproducibility(unittest.TestCase):
     """
@@ -50,6 +52,7 @@ class TestSignalEngineReproducibility(unittest.TestCase):
         
         # 2. HARD ENFORCEMENT OF HISTORICAL GOLDEN MASTER VALUES
         self.assertEqual(run_a["input_hash"], GOLDEN_INPUT_HASH, "❌ REGRESSION: Input canonical hash has mutated.")
+        self.assertEqual(run_a["output_hash"], GOLDEN_OUTPUT_HASH, "❌ REGRESSION: Output canonical hash has mutated.")
         self.assertEqual(run_a["composite_score"], GOLDEN_COMPOSITE_SCORE, "❌ REGRESSION: Math core drift detected.")
         
         # 3. Factor-Level Score Map Alignment Lock
@@ -60,7 +63,10 @@ class TestSignalEngineReproducibility(unittest.TestCase):
         factor_names = [f["name"] for f in run_a["factor_scores"]]
         self.assertEqual(len(factor_names), len(set(factor_names)), "❌ SECURITY FAULT: Duplicate factor identifiers encountered.")
 
-        # 5. Assert Factor Schema Bounding and Constraints
+        # 5. Assert Factor Schema Bounding and Full Payload Integrity Constraints
+        expected_keys = {"asset", "composite_score", "factor_scores", "input_hash", "output_hash", "classification", "confidence_band", "generated_at_utc", "model_version"}
+        self.assertTrue(expected_keys.issubset(set(run_a.keys())), "❌ REGRESSION: Signal output payload structure has drifted or keys are missing.")
+
         for factor in run_a["factor_scores"]:
             self.assertIsInstance(factor["name"], str)
             self.assertIsInstance(factor["score"], (int, float))
@@ -75,21 +81,19 @@ class TestSignalEngineReproducibility(unittest.TestCase):
             "NEGATIVE_MOMENTUM": {"price_change_24h_pct": -45.0, "price_change_7d_pct": -85.0, "price_change_30d_pct": -150.0, "volume_24h": 10000000.0, "volume_delta": 2.0, "market_cap": 300000000.0, "price": 15.0, "z_score": -3.5, "volatility": 0.5, "category": "AI_Hardware", "source": "API"}
         }
         
-        # Enforce conservative operational value boundaries per alternative trend anomaly
+        # Enforce operational value boundaries per alternative trend anomaly
         expected_ranges = {
             "ZERO_VOLUME": (0.0, 60.0),
             "MASSIVE_VOLATILITY": (0.0, 55.0),
             "MISSING_OPTIONAL_FIELDS": (10.0, 90.0),
-            "NEGATIVE_MOMENTUM": (0.0, 50.0) # Expanded to 50.0 to capture the true 46.27 clipping boundary safely
+            "NEGATIVE_MOMENTUM": (0.0, 50.0)
         }
-
         
         for case_name, payload in edge_cases.items():
             with self.subTest(case=case_name):
                 signal = generate_signal("EDGE_ASSET", payload).to_dict()
                 score = signal["composite_score"]
                 
-                # Assert the score lands strictly within its designated compliance band bounds
                 min_bound, max_bound = expected_ranges[case_name]
                 self.assertTrue(min_bound <= score <= max_bound, f"❌ FAIL: Edge case [{case_name}] produced unexpected outlying score: {score}")
 
