@@ -7,9 +7,11 @@ class IndustryStandardReport:
     Visualization Core: Compiles dense tabular datasets alongside 
     responsive, dark-mode terminal interfaces embedded with inline vector charts.
     """
+
     def generate_report(self, playbook, expert_narrative):
         csv_filename = "market_anomaly_dataset.csv"
-        csv_fields = ["ticker", "category", "price", "trend", "composite_signal_score", "z_score"]
+        # Expanded to include precise data provenance keys
+        csv_fields = ["ticker", "category", "price", "trend", "composite_signal_score", "z_score", "model_version", "data_source"]
         
         try:
             with open(csv_filename, mode='w', newline='', encoding='utf-8') as f:
@@ -24,10 +26,12 @@ class IndustryStandardReport:
                         "price": f"{metrics_block.get('price', 0.0):.2f}",
                         "trend": p.get("classification", "NOMINAL_VARIANCE"),
                         "composite_signal_score": f"{p.get('composite_score', 0.0):.1f}",
-                        "z_score": f"{metrics_block.get('z_score', 0.0):.2f}"
+                        "z_score": f"{metrics_block.get('z_score', 0.0):.2f}",
+                        "model_version": p.get("model_version", "v1.0.0"),
+                        "data_source": metrics_block.get("source", "Public API Feed")
                     }
                     writer.writerow(row_data)
-            print(f"✅ Quantitative CSV Dataset Exported: {csv_filename}")
+            print(f"✅ Quantitative CSV Dataset Exported with Full Data Provenance: {csv_filename}")
         except Exception as e:
             print(f"Error generating CSV: {e}")
 
