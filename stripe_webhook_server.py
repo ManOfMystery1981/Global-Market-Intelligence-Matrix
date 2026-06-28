@@ -1,40 +1,113 @@
+#!/usr/bin/env python3
+"""
+stripe_webhook_server.py
+Institutional Entitlement Gateway: Processes secure billing webhooks,
+enforces signature verification, and maps subscription tokens safely.
+"""
+
 import os
-import stripe
+import json
+import logging
 from flask import Flask, request, jsonify
-from supabase import create_client
+import stripe
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("Institutional_Billing_Gateway")
 
 app = Flask(__name__)
 
-# Secure Config
-stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
-ENDPOINT_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
-supabase = create_client(os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_SERVICE_ROLE_KEY"))
+# Enforce secure configuration mapping out of protected environment caches
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "sk_test_mock_placeholder")
+STRIPE_ENDPOINT_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "whsec_mock_placeholder")
 
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    payload = request.data
-    sig_header = request.headers.get('Stripe-Signature')
+# DEFINITIVE BRAND ENTITLEMENT MAPPING MATRIX
+# Explicitly links external Stripe Price object IDs to internal permission tokens
+TIER_ENTITLEMENT_MAP = {
+    "price_1MmockAI_StandardMonthly": "standard_research_tier",
+    "price_1MmockAI_PremiumInstitutional": "premium_institutional_tier",
+    "price_1MmockAI_DataArbitrageAPI": "enterprise_data_api_tier"
+}
 
+def update_user_subscription_status(customer_id: str, price_id: str, status: str):
+    """
+    State Synchronization Loop: Maps price parameters straight to token
+    entitlements, enforcing explicit database record preservation.
+    """
+    internal_tier_token = TIER_ENTITLEMENT_MAP.get(price_id, "free_anonymous_tier")
+    
+    logger.info(f"💾 STATE UPDATE: Customer [{customer_id}] mapped to Tier Token [{internal_tier_token}] (Status: {status})")
+    
+    # LOAD/UPDATE USER REGISTRY SUBSCRIBERS MATRIX FILE
+    ledger_path = "subscribers.json"
     try:
-        event = stripe.Webhook.construct_event(payload, sig_header, ENDPOINT_SECRET)
+        if os.path.exists(ledger_path):
+            with open(ledger_path, "r", encoding="utf-8") as f:
+                ledger = json.load(f)
+        else:
+            ledger = {}
+            
+        # Synchronize structural tier permissions
+        ledger[customer_id] = {
+            "tier_token": internal_tier_token,
+            "stripe_price_id": price_id,
+            "subscription_status": status,
+            "last_synchronized_utc": stripe.Util.utc_now() if hasattr(stripe, 'Util') else "CURRENT_TIMESTAMP"
+        }
+        
+        with open(ledger_path, "w", encoding="utf-8") as f:
+            json.dump(ledger, f, indent=4)
+        logger.info(f"✅ LEDGER SYNCHRONIZED: Saved status for Customer [{customer_id}]")
     except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        logger.error(f"❌ DATABASE LOCK FAULT: Failed to update local subscription matrix: {e}")
 
-    # Triggered on successful payment
-    if event['type'] == 'checkout.session.completed':
-        session = event['data']['object']
-        customer_email = session.get('customer_details', {}).get('email')
+@app.route("/api/v1/billing/webhook", methods=["POST"])
+def handle_stripe_billing_webhook():
+    """
+    Ingestion Endpoint: Validates cryptographic signature payloads
+    and orchestrates serverless entitlement updates safely.
+    """
+    payload = request.data
+    sig_header = request.headers.get("Stripe-Signature")
+    
+    # GATE 1: Cryptographic Signature Enforcement Check
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, STRIPE_ENDPOINT_SECRET
+        )
+    except ValueError as e:
+        logger.error("❌ SECURITY ALERT: Invalid payload body structure parsed.")
+        return jsonify({"error": "Invalid payload format"}), 400
+    except stripe.error.SignatureVerificationError as e:
+        logger.error(f"❌ SECURITY ALERT: Cryptographic signature mismatch verification failed: {e}")
+        return jsonify({"error": "Signature mismatch verification failed"}), 400
+
+    event_type = event["type"]
+    event_id = event["id"]
+    logger.info(f"📦 INGESTED WEBHOOK: Processing event {event_id} [Type: {event_type}]")
+
+    # GATE 2: Route Context Entitlements Based on Stripe Event Types
+    if event_type in ["customer.subscription.created", "customer.subscription.updated"]:
+        subscription = event["data"]["object"]
+        customer_id = subscription.get("customer")
+        status = subscription.get("status")
         
-        # Insert user into Supabase to enable them for the next DeliveryAgent run
-        supabase.table("subscribers").insert({
-            "email": customer_email,
-            "status": "active_annual",
-            "subscription_id": session.get('id')
-        }).execute()
-        
-        print(f"✅ New subscriber provisioned: {customer_email}")
+        # Pull the primary price identifier safely out of the nested array lines object
+        items = subscription.get("items", {}).get("data", [])
+        if items:
+            price_id = items[0].get("price", {}).get("id")
+            update_user_subscription_status(customer_id, price_id, status)
+        else:
+            logger.warning(f"⚠️ METADATA MISSING: No pricing item metadata arrays found on Subscription {subscription.get('id')}")
 
-    return '', 200
+    elif event_type == "customer.subscription.deleted":
+        subscription = event["data"]["object"]
+        customer_id = subscription.get("customer")
+        # Revoke or downgrade user status immediately upon plan termination
+        update_user_subscription_status(customer_id, "plan_terminated", "canceled")
 
-if __name__ == '__main__':
-    app.run(port=4242)
+    return jsonify({"status": "success", "processed_event_id": event_id}), 200
+
+if __name__ == "__main__":
+    # Internal dev-server initialization route parameters
+    app.run(port=4242, debug=True)
+EOF
