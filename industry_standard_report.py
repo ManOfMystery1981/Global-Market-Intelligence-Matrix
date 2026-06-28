@@ -80,7 +80,7 @@ class IndustryStandardReport:
         </head>
         <body>
             <div class="container">
-                <h1>🏛 shrink-wrap MARKET ANOMALY RESEARCH BRIEF</h1>
+                <h1>🏛️ MARKET ANOMALY RESEARCH BRIEF</h1>
                 {expert_narrative}
                 <h2>📊 Statistical Divergence Distributions</h2>
                 <div class="visual-grid">{svg_charts}</div>
