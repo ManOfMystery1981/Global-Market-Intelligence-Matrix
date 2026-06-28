@@ -123,7 +123,6 @@ def process_webhook_transaction(event_id: str, event_type: str, event_created: i
             period_end = int(payload_data.get("current_period_end", 0))
             items = payload_data.get("items", {})
             
-            # Extract nested data lists safely handling standard Stripe collections
             if isinstance(items, dict):
                 data_list = items.get("data", [])
             elif isinstance(items, list):
@@ -140,12 +139,13 @@ def process_webhook_transaction(event_id: str, event_type: str, event_created: i
                 first_item = data_list
             else:
                 first_item = {}
+                
             price_id = first_item.get("price", {}).get("id") if isinstance(first_item, dict) else None
             
             if price_id not in YEARLY_PRICE_IDS:
                 raise ValueError(f"Ingested unmapped price ID entry: [{price_id}]. Denied access.")
 
-            # Monotonic Timestamp Sequence Check to prevent out-of-order race conditions
+            # Monotonic Timestamp Sequence Check
             cursor.execute("SELECT last_event_created FROM stripe_subscriptions WHERE subscription_id = ?", (sub_id,))
             row = cursor.fetchone()
             if row and event_created < row[0]:
@@ -164,7 +164,8 @@ def process_webhook_transaction(event_id: str, event_type: str, event_created: i
                     updated_at_utc = excluded.updated_at_utc
             """, (sub_id, customer_id, price_id, status, period_end, event_created, current_timestamp))
             
-            is_active = 1 if status in ["active", "trialing"] else 0
+            # Policy Rule: If subscription is marked canceled (but not deleted), maintain active access until period end
+            is_active = 1 if status in ["active", "trialing", "canceled"] else 0
             cursor.execute("""
                 INSERT INTO user_entitlements (customer_id, yearly_access_active, yearly_access_until, updated_at_utc)
                 VALUES (?, ?, ?, ?)
@@ -180,7 +181,7 @@ def process_webhook_transaction(event_id: str, event_type: str, event_created: i
             if not sub_id or not customer_id:
                 raise ValueError("Missing target relational handles on deleted plan tracking frame.")
                 
-            cursor.execute("UPDATE stripe_subscriptions SET status = 'canceled', updated_at_utc = ? WHERE subscription_id = ?", (current_timestamp, sub_id))
+            cursor.execute("UPDATE stripe_subscriptions SET status = 'ended', updated_at_utc = ? WHERE subscription_id = ?", (current_timestamp, sub_id))
             cursor.execute("UPDATE user_entitlements SET yearly_access_active = 0, updated_at_utc = ? WHERE customer_id = ?", (current_timestamp, customer_id))
             logger.info(f"🚫 SUBSCRIPTION DEACTIVATED: Access window dismantled for Sub [{sub_id}]")
 
@@ -211,11 +212,16 @@ def process_webhook_transaction(event_id: str, event_type: str, event_created: i
             report_product_token = ONE_TIME_REPORT_PRICE_IDS[price_id]
             purchase_uuid = f"pur_{session_id}"
             
-            cursor.execute("""
-                INSERT INTO report_purchases (purchase_id, customer_id, checkout_session_id, report_product_id, purchased_at_utc)
-                VALUES (?, ?, ?, ?, ?)
-            """, (purchase_uuid, customer_id, session_id, report_product_token, current_timestamp))
-            logger.info(f"💰 LEDGER SINGLE PAYMENT RECORDED: User [{customer_id}] granted permanent lock to report [{report_product_token}]")
+            try:
+                cursor.execute("""
+                    INSERT INTO report_purchases (purchase_id, customer_id, checkout_session_id, report_product_id, purchased_at_utc)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (purchase_uuid, customer_id, session_id, report_product_token, current_timestamp))
+                logger.info(f"💰 LEDGER SINGLE PAYMENT RECORDED: User [{customer_id}] granted permanent lock to report [{report_product_token}]")
+            except sqlite3.IntegrityError:
+                logger.warning(f"🛡️ UNIQUE CHECKOUT BLOCKED: Duplicate line-item complete session webhook bypassed for {session_id}")
+                conn.rollback()
+                return "duplicate_checkout_ignored", 200
 
         conn.commit()
         return "success", 200
