@@ -1,43 +1,20 @@
-# .github/dependabot.yml
+# ==============================================================================
+# dependabot.yml
+# Institutional Autopilot Core: Tracks and Updates System Package Dependencies
+# ==============================================================================
 version: 2
+
 updates:
-  # Python dependencies (pip)
-  - package-ecosystem: "pip"
+  - package-ecosystem: "pip" # Fixed: Shifted away from npm_and_yarn to native Python requirements
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "weekly" # Runs checks once a week to prevent burst pipeline spam
     open-pull-requests-limit: 5
-    commit-message:
-      prefix: "deps"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "python"
+    allow:
+      - dependency-type: "direct" # Prioritizes upper-tier dependency upgrades
 
-  # Node.js/JavaScript dependencies (npm)
-  - package-ecosystem: "npm"
+  - package-ecosystem: "github-actions" # Automatically updates checkout@v4, setup-python@v5, etc.
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "monday"
-    open-pull-requests-limit: 5
-    commit-message:
-      prefix: "deps"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "javascript"
-
-  # GitHub Actions (for your workflows)
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    commit-message:
-      prefix: "chore"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "github-actions"
+    open-pull-requests-limit: 3
