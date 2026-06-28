@@ -30,7 +30,7 @@ STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
 if not STRIPE_SECRET_KEY or not STRIPE_WEBHOOK_SECRET:
-    logger.critical("❌ CONFIGURATION FAULT: Missing required STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET environment vectors.")
+    logger.critical("❌ CONFIGURATION FAULT: Missing required credentials.")
     sys.exit(1)
 
 stripe.api_key = STRIPE_SECRET_KEY
@@ -52,7 +52,7 @@ def initialize_database():
         conn.execute("PRAGMA busy_timeout=5000;")
         cursor = conn.cursor()
         
-        # 1. Idempotency Log (The Master Atomic Lock)
+        # 1. Idempotency Log
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS stripe_events (
                 event_id TEXT PRIMARY KEY,
@@ -83,7 +83,7 @@ def initialize_database():
                 purchased_at_utc TEXT NOT NULL
             )
         """)
-        # 4. Cached Entitlement Lookup Table (Optimized fast reads for agent pipelines)
+        # 4. Cached Entitlement Lookup Table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS user_entitlements (
                 customer_id TEXT PRIMARY KEY,
@@ -117,17 +117,31 @@ def process_webhook_transaction(event_id: str, event_type: str, event_created: i
 
         # --- AUDIT GATE 2: YEARLY SUBSCRIPTION PERMISSION UPDATES ---
         if event_type in ["customer.subscription.created", "customer.subscription.updated"]:
-            sub_obj = payload_data
-            sub_id = sub_obj.get("id")
-            customer_id = sub_obj.get("customer")
-            status = sub_obj.get("status")
-            period_end = int(sub_obj.get("current_period_end", 0))
+            sub_id = payload_data.get("id")
+            customer_id = payload_data.get("customer")
+            status = payload_data.get("status")
+            period_end = int(payload_data.get("current_period_end", 0))
+            items = payload_data.get("items", {})
             
-            items = sub_obj.get("items", {}).get("data", [])
-            if not items or not sub_id or not customer_id or not status:
+            # Extract nested data lists safely handling standard Stripe collections
+            if isinstance(items, dict):
+                data_list = items.get("data", [])
+            elif isinstance(items, list):
+                data_list = items
+            else:
+                data_list = []
+
+            if not data_list or not sub_id or not customer_id or not status:
                 raise ValueError("Missing mandatory relational keys inside inbound subscription payload.")
                 
-            price_id = items[0].get("price", {}).get("id") if isinstance(items, list) and len(items) > 0 else None
+            if isinstance(data_list, list) and len(data_list) > 0:
+                first_item = data_list[0]
+            elif isinstance(data_list, dict):
+                first_item = data_list
+            else:
+                first_item = {}
+            price_id = first_item.get("price", {}).get("id") if isinstance(first_item, dict) else None
+            
             if price_id not in YEARLY_PRICE_IDS:
                 raise ValueError(f"Ingested unmapped price ID entry: [{price_id}]. Denied access.")
 
@@ -161,9 +175,8 @@ def process_webhook_transaction(event_id: str, event_type: str, event_created: i
             """, (customer_id, is_active, period_end, current_timestamp))
 
         elif event_type == "customer.subscription.deleted":
-            sub_obj = payload_data
-            sub_id = sub_obj.get("id")
-            customer_id = sub_obj.get("customer")
+            sub_id = payload_data.get("id")
+            customer_id = payload_data.get("customer")
             if not sub_id or not customer_id:
                 raise ValueError("Missing target relational handles on deleted plan tracking frame.")
                 
@@ -173,10 +186,9 @@ def process_webhook_transaction(event_id: str, event_type: str, event_created: i
 
         # --- AUDIT GATE 3: ONE-OFF REPORT PURCHASE LEDGER ENTRIES ---
         elif event_type == "checkout.session.completed":
-            session = payload_data
-            session_id = session.get("id")
-            customer_id = session.get("customer")
-            payment_status = session.get("payment_status")
+            session_id = payload_data.get("id")
+            customer_id = payload_data.get("customer")
+            payment_status = payload_data.get("payment_status")
             
             if not session_id or not customer_id:
                 raise ValueError("Missing critical user/session handles inside completion tracking vector.")
@@ -185,13 +197,13 @@ def process_webhook_transaction(event_id: str, event_type: str, event_created: i
                 logger.warning(f"💸 UNPAID EXCEPTION: Session [{session_id}] completed with status: {payment_status}. Access withheld.")
                 return "unpaid_session_acknowledged", 200
 
-            if session.get("mode") == "subscription":
+            if payload_data.get("mode") == "subscription":
                 logger.info(f"ℹ️ ROUTING FLOW: Passing sub session handle [{session_id}] down to dedicated handler rules.")
                 conn.rollback()
                 return "routed_to_subscription", 200
 
-            line_items = session.get("line_items", {}).get("data", [])
-            price_id = line_items[0].get("price", {}).get("id") if isinstance(line_items, list) and len(line_items) > 0 else session.get("metadata", {}).get("stripe_price_id")
+            line_items = payload_data.get("line_items", {}).get("data", [])
+            price_id = line_items[0].get("price", {}).get("id") if line_items else payload_data.get("metadata", {}).get("stripe_price_id")
 
             if price_id not in ONE_TIME_REPORT_PRICE_IDS:
                 raise ValueError(f"Ingested unmapped singular item price ID marker: [{price_id}]. Denied transaction.")
