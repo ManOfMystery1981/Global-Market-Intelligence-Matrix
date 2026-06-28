@@ -48,6 +48,7 @@ class TestSignalEngineReproducibility(unittest.TestCase):
         self.assertEqual(self.fixture_input, input_snapshot, "❌ FAULT: Data ingestion loop mutated input metrics.")
         self.assertEqual(run_a["input_hash"], run_b["input_hash"], "❌ FAULT: Hashing loop is vulnerable to insertion-order drift.")
         self.assertEqual(run_a["output_hash"], run_b["output_hash"])
+        self.assertNotEqual(run_a["input_hash"], run_a["output_hash"], "❌ FAULT: Input and output hashes should represent distinct canonical payloads.")
         self.assertEqual(run_a["composite_score"], run_b["composite_score"])
         
         # 2. HARD ENFORCEMENT OF HISTORICAL GOLDEN MASTER VALUES
