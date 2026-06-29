@@ -1,4 +1,3 @@
-// api/webhook.js
 import { Octokit } from "@octokit/rest";
 
 const octokit = new Octokit({ auth: process.env.GITHUB_ACCESS_TOKEN });
@@ -10,7 +9,11 @@ export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     try {
-        const { customer_email, payment_status } = req.body;
+        // Parse the incoming body text safely if it arrives as a string
+        const payload = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+        const { customer_email, payment_status } = payload || {};
+
+        if (!customer_email) return res.status(400).json({ error: 'Missing customer email' });
         if (payment_status !== 'paid') return res.status(400).json({ error: 'Transaction incomplete' });
 
         const { data: fileData } = await octokit.repos.getContent({ owner: OWNER, repo: REPO, path: FILE_PATH });
@@ -29,6 +32,7 @@ export default async function handler(req, res) {
         }
         return res.status(200).json({ status: 'success' });
     } catch (error) {
+        console.error("❌ Pipeline Crash Exception:", error.message);
         return res.status(500).json({ error: 'Internal pipeline failure' });
     }
 }
