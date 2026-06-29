@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 """
-stripe_webhook_server.py
+stripe_webhook_server.py - Part 1
 Institutional Billing Gateway (A+ Compliance Tier)
-- Enforces strict multi-table relational schema for sub vs one-off ledgers.
-- Implements single-transaction idempotency locking (INSERT ON CONFLICT).
-- Prevents out-of-order race conditions using monotonic event timestamps.
-- Optimizes database concurrency handling with WAL-mode connection pools.
 """
 
 import os
@@ -95,7 +91,6 @@ def initialize_database():
         conn.commit()
 
 initialize_database()
-
 def process_webhook_transaction(event_id: str, event_type: str, event_created: int, payload_data: dict) -> tuple[str, int]:
     """Orchestrates atomic event deduplication and mutations inside a single isolated transaction."""
     current_timestamp = datetime.now(timezone.utc).isoformat()
@@ -133,13 +128,7 @@ def process_webhook_transaction(event_id: str, event_type: str, event_created: i
             if not data_list or not sub_id or not customer_id or not status:
                 raise ValueError("Missing mandatory relational keys inside inbound subscription payload.")
                 
-            if isinstance(data_list, list) and len(data_list) > 0:
-                first_item = data_list[0]
-            elif isinstance(data_list, dict):
-                first_item = data_list
-            else:
-                first_item = {}
-                
+            first_item = data_list[0] if len(data_list) > 0 else {}
             price_id = first_item.get("price", {}).get("id") if isinstance(first_item, dict) else None
             
             if price_id not in YEARLY_PRICE_IDS:
@@ -204,14 +193,16 @@ def process_webhook_transaction(event_id: str, event_type: str, event_created: i
                 return "routed_to_subscription", 200
 
             line_items = payload_data.get("line_items", {}).get("data", [])
-            price_id = line_items[0].get("price", {}).get("id") if line_items else payload_data.get("metadata", {}).get("stripe_price_id")
+            if line_items and len(line_items) > 0:
+                price_id = line_items[0].get("price", {}).get("id")
+            else:
+                price_id = payload_data.get("metadata", {}).get("stripe_price_id")
 
             if price_id not in ONE_TIME_REPORT_PRICE_IDS:
                 raise ValueError(f"Ingested unmapped singular item price ID marker: [{price_id}]. Denied transaction.")
                 
             report_product_token = ONE_TIME_REPORT_PRICE_IDS[price_id]
             purchase_uuid = f"pur_{session_id}"
-            
             try:
                 cursor.execute("""
                     INSERT INTO report_purchases (purchase_id, customer_id, checkout_session_id, report_product_id, purchased_at_utc)
@@ -225,7 +216,6 @@ def process_webhook_transaction(event_id: str, event_type: str, event_created: i
 
         conn.commit()
         return "success", 200
-
 @app.route("/api/v1/billing/webhook", methods=["POST"])
 def handle_stripe_billing_webhook():
     """Validates inbound payload parameters and protects internal logic against system error leakages."""
@@ -260,4 +250,4 @@ def handle_stripe_billing_webhook():
 if __name__ == "__main__":
     is_debug_active = os.getenv("FLASK_DEBUG") == "1"
     logger.info(f"🚀 Initializing A+ Dual-Ledger Billing Engine (Debug Environments: {is_debug_active})")
-    app.run(port=4242, debug=is_debug_active)
+    app.run(host="127.0.0.1", port=4242, debug=is_debug_active)
