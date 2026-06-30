@@ -25,7 +25,7 @@ logger = logging.getLogger("LLM_Analyst_Bot")
 class LocalLLMProvider:
     def __init__(self, model_name: str = "dolphin-mistral"):
         # Fixed: Fallback to the Docker service name if running inside a container network layout
-        self.endpoint = "http://local_llm_core:11434/api/generate"
+        self.endpoint = "http://localhost:11434/api/generate"
         self.model_name = model_name
 
     def complete(self, prompt: str) -> str:
