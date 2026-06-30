@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Checkout Repository Files
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Dedicated Python Runtime Environment
         uses: actions/setup-python@v5
