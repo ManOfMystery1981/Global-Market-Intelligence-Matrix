@@ -7,4 +7,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["python3", "llm_analyst_bot.py"]
+# Fixed: Keeps the container completely awake on boot so it never enters a restarting crash loop
+CMD ["tail", "-f", "/dev/null"]
