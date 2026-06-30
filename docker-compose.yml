@@ -9,6 +9,7 @@ services:
       - "4242:4242"
     environment:
       - COINGECKO_API_KEY=${COINGECKO_API_KEY}
+      - RESEND_API_KEY=${RESEND_API_KEY}
       - GEMINI_API_KEY=local_inference_active
     volumes:
       - .:/app
