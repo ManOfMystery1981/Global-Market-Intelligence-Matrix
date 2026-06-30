@@ -42,3 +42,5 @@ __pycache__/
 corporate_ledger.db
 market_anomaly_dataset.csv
 playbook.html
+matrix_billing.service
+.env

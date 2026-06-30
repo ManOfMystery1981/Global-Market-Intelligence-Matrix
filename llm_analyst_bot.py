@@ -45,7 +45,7 @@ class LocalLLMProvider:
                 headers={"Content-Type": "application/json"},
                 method="POST"
             )
-            with urllib.request.urlopen(req, timeout=60) as response:
+            with urllib.request.urlopen(req, timeout=600) as response:
                 res_data = json.loads(response.read().decode('utf-8'))
             return res_data["response"]
         except Exception as e:
