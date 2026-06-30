@@ -68,11 +68,16 @@ class MultiFactorSignalEngine:
         scored_playbook = []
         
         for asset, metrics in raw_data.items():
-            momentum = min(100, max(5, int(metrics["volume_delta"] * 40)))
-            z = abs(metrics["z_score"])
+            volume_delta = metrics.get("volume_delta", 0.0)
+            z_score_raw = metrics.get("z_score", 0.0)
+            volatility = metrics.get("volatility", 0.0)
+            volume_24h = metrics.get("volume_24h", 0.0)
+
+            momentum = min(100, max(5, int(volume_delta * 40)))
+            z = abs(z_score_raw)
             anomaly = min(100, max(5, int((1 / (1 + math.exp(-z))) * 100)))
-            narrative = min(100, max(10, int(metrics["volatility"] * 200)))
-            liquidity = min(100, max(10, int(math.log10(metrics["volume_24h"] + 1) * 8.5)))
+            narrative = min(100, max(10, int(volatility * 200)))
+            liquidity = min(100, max(10, int(math.log10(volume_24h + 1) * 8.5)))
             composite_score = int((momentum * 0.25) + (anomaly * 0.25) + (narrative * 0.20) + (liquidity * 0.30))
             
             signal_status = "EXTREME_ANOMALY" if composite_score > 72 else "NOMINAL_VARIANCE"
