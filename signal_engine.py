@@ -55,6 +55,7 @@ class CompositeSignal:
     input_hash: str
     output_hash: str
     limitations: List[str]
+    metrics: Dict[str, Any]
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -228,7 +229,7 @@ def generate_signal(asset: str, metrics: Dict[str, Any]) -> CompositeSignal:
     composite = compute_composite_score(factors)
     preliminary_output = {"asset": asset, "model_version": MODEL_VERSION, "composite_score": composite, "classification": classify_score(composite), "confidence_band": confidence_band(composite), "factor_scores": [asdict(factor) for factor in factors], "input_hash": input_hash, "limitations": build_limitations(metrics)}
     output_hash = stable_hash(preliminary_output)
-    return CompositeSignal(asset=asset, model_version=MODEL_VERSION, generated_at_utc=utc_now_iso(), composite_score=composite, classification=classify_score(composite), confidence_band=confidence_band(composite), factor_scores=factors, input_hash=input_hash, output_hash=output_hash, limitations=build_limitations(metrics))
+    return CompositeSignal(asset=asset, model_version=MODEL_VERSION, generated_at_utc=utc_now_iso(), composite_score=composite, classification=classify_score(composite), confidence_band=confidence_band(composite), factor_scores=factors, input_hash=input_hash, output_hash=output_hash, limitations=build_limitations(metrics), metrics=metrics)
 
 def calculate_signal(asset: str, metrics: Dict[str, Any]) -> Dict[str, Any]:
     return generate_signal(asset, metrics).to_dict()
