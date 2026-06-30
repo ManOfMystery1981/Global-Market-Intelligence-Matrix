@@ -2,7 +2,7 @@
 """
 llm_analyst_bot.py - Part 1
 Institutional Data Analysis Core (A+ Compliance Tier)
-Hardened Production Release Engine with Real-Time Token Streaming Logic
+Hardened Production Release Engine with Cold-Start Connect Isolation
 """
 
 import os
@@ -51,7 +51,6 @@ class HardenedLLMProvider:
                 {"role": "system", "content": "You are a rigid financial compliance bot. Strictly follow user data guidelines."},
                 {"role": "user", "content": prompt}
             ],
-            # FIXED: Enforce true streaming mode over the network socket channel
             "stream": True,
             "options": {"temperature": 0.1, "num_predict": 512, "num_ctx": 4096}
         }
@@ -61,8 +60,8 @@ class HardenedLLMProvider:
         
         accumulated_response = []
         try:
-            # Short timeout bounds are now completely safe because we poll data continuously
-            with urllib.request.urlopen(req, timeout=30) as response:
+            # FIXED: Expanded the socket timeout boundaries to 120s to absorb model cold-start RAM loading lag
+            with urllib.request.urlopen(req, timeout=120) as response:
                 while True:
                     line = response.readline()
                     if not line:
@@ -72,13 +71,12 @@ class HardenedLLMProvider:
                     token = parsed_chunk.get("message", {}).get("content", "")
                     accumulated_response.append(token)
                     
-                    # Optional: Flushes raw tokens directly to terminal out to show live background computation
                     sys.stdout.write(token)
                     sys.stdout.flush()
                     
                     if parsed_chunk.get("done", False):
                         break
-            print() # Print clean line break after stream terminates cleanly
+            print() 
             return "".join(accumulated_response)
         except Exception as e:
             self._circuit_broken = True
@@ -197,7 +195,6 @@ class LLMAnalystBot:
                 telemetry={"composite_score": composite_telemetry_score, "classification": "Active Stream Run"},
                 as_of_utc=current_utc_time
             )
-            # FIXED: Call the updated, streaming connection layer method natively
             segment_text = self.provider.complete_stream(batch_prompt)
             compiled_report_segments.append(segment_text)
             
@@ -214,7 +211,7 @@ class LLMAnalystBot:
         if not is_audit_approved:
             shutil.rmtree(session_dir, ignore_errors=True)
             logger.critical(f"[{self.run_uuid}] 🚨 FAIL-CLOSED RELEASE CEILING TRIGGERED: Report failed integrity checks.")
-            raise RuntimeError(f"Compliance validation failed. Refusing to compile or publish output.")
+            raise SecurityError(f"Compliance validation failed. Refusing to compile or publish output.")
             
         logger.info(f"[{self.run_uuid}] ✅ COMPLIANCE STATUS VERIFIED: Passing document to isolation compiler...")
         
@@ -237,7 +234,7 @@ class LLMAnalystBot:
             if not os.path.exists(temp_csv_path):
                 raise FileNotFoundError(f"[{self.run_uuid}] ❌ COMPLIANCE CRITICAL: CSV metadata dataset artifact generation missing.")
 
-            # ATOMIC PROMOTION COMMIT GATE
+            # ATOMIC PROMOTION COMMIT GATE - ENFORCING NATIVE os.replace()
             os.makedirs(production_dir, exist_ok=True)
             os.replace(temp_html_path, final_html_delivery_target)
             logger.info(f"[{self.run_uuid}] 🚀 Atomic Replace Successful: Artifact promoted cleanly to: {final_html_delivery_target}")
@@ -250,7 +247,7 @@ class LLMAnalystBot:
                 raise dispatch_err
             
         except Exception as file_error:
-            logger.critical(f"[{self.run_uuid}] 🚨 UNCAUGHT CRASH IN ATOMIC PROCESSING LAYER: {file_error}")
+            logger.critical(f"🚨 UNCAUGHT CRASH IN ATOMIC PROCESSING LAYER: {file_error}")
             raise file_error
             
         finally:
