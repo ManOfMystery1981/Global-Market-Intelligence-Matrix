@@ -211,7 +211,7 @@ class LLMAnalystBot:
         if not is_audit_approved:
             shutil.rmtree(session_dir, ignore_errors=True)
             logger.critical(f"[{self.run_uuid}] 🚨 FAIL-CLOSED RELEASE CEILING TRIGGERED: Report failed integrity checks.")
-            raise SecurityError(f"Compliance validation failed. Refusing to compile or publish output.")
+            raise RuntimeError(f"Compliance validation failed. Refusing to compile or publish output.")
             
         logger.info(f"[{self.run_uuid}] ✅ COMPLIANCE STATUS VERIFIED: Passing document to isolation compiler...")
         
