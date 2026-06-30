@@ -23,7 +23,7 @@ jobs:
       - name: Install Ingestion Core Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests resend
+          pip install requests resend yfinance
 
       - name: Spin Up Local AI Container Core ($0 Cost)
         # Pulls and starts Ollama isolated in the background natively
