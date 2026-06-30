@@ -1,0 +1,56 @@
+name: Run Analyst Pipeline
+
+on:
+  schedule:
+    - cron: '0 13 * * *'  # runs daily at 13:00 UTC
+  workflow_dispatch: {}    # allows manual trigger from the Actions tab
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout Repository Files
+        uses: actions/checkout@v4
+
+      - name: Setup Dedicated Python Runtime Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Ingestion Core Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests resend
+
+      - name: Spin Up Local AI Container Core ($0 Cost)
+        # Pulls and starts Ollama isolated in the background natively
+        run: docker run -d -p 11434:11434 --name matrix_llm_core ollama/ollama:latest
+
+      - name: Wait for Ollama to be Ready
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:11434/api/tags > /dev/null; then
+              echo "✅ Ollama container stack is up and operational."
+              break
+            fi
+            echo "⏳ Waiting for local inference socket handshake..."
+            sleep 5
+          done
+
+      - name: Pre-Load Dolphin Mistral Model Weights
+        # Queries the background container directly to ingest the model framework
+        run: docker exec matrix_llm_core ollama pull dolphin-mistral
+
+      - name: Run Analyst Pipeline Natively with Shared Log Routing
+        env:
+          # Securely injects both verified secret credentials straight to the execution run
+          COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: python3 llm_analyst_bot.py
+
+      - name: Shut Down Containers
+        if: always()
+        run: docker rm -f matrix_llm_core
