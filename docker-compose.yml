@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  # Ingestion & Billing Layer
+  finance_backend:
+    build: .
+    container_name: matrix_backend_app
+    restart: always
+    ports:
+      - "4242:4242"
+    environment:
+      - COINGECKO_API_KEY=${COINGECKO_API_KEY}
+      - GEMINI_API_KEY=local_inference_active
+    volumes:
+      - .:/app
+    depends_on:
+      - local_llm_core
+
+  # Local AI Inference Layer ($0 Cost)
+  local_llm_core:
+    image: ollama/ollama:latest
+    container_name: matrix_llm_core
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_storage:/root/.ollama
+
+volumes:
+  ollama_storage:

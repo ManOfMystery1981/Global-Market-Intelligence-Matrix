@@ -1,0 +1,44 @@
+name: Run Analyst Pipeline
+
+on:
+  schedule:
+    - cron: '0 13 * * *'  # runs daily at 13:00 UTC
+  workflow_dispatch: {}    # allows manual trigger from the Actions tab
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout Repository Files
+        uses: actions/checkout@v4
+
+      - name: Start Docker Compose stack
+        env:
+          # Injects your GitHub secrets directly into the compose string interpolation layer
+          COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
+        run: docker compose up -d
+
+      - name: Wait for Ollama to be Ready
+        run: |
+          for i in {1..30}; do
+            # Bypasses internal container gates to check port availability from the runner host
+            if curl -s http://localhost:11434/api/tags > /dev/null; then
+              echo "✅ Ollama core network link is active."
+              break
+            fi
+            echo "⏳ Waiting for local inference container boot loop..."
+            sleep 5
+          done
+
+      - name: Pull Dolphin-Mistral Model
+        run: docker exec matrix_llm_core ollama pull dolphin-mistral
+
+      - name: Run the Analyst Pipeline Inside the Container Namespace
+        # Executes the analysis pass directly inside your backend container layout
+        run: docker exec matrix_backend_app python3 llm_analyst_bot.py
+
+      - name: Shut Down Container Stack
+        if: always()
+        run: docker compose down
