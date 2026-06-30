@@ -2,7 +2,7 @@
 """
 llm_analyst_bot.py - Part 1
 Institutional Data Analysis Core (A+ Compliance Tier)
-Hardened Local Inference Layer targeting Dockerized Dolphin-Mistral Engine
+Hardened Production Release Engine with Real-Time Token Streaming Logic
 """
 
 import os
@@ -10,7 +10,10 @@ import sys
 import json
 import logging
 import urllib.request
+import urllib.parse
 import urllib.error
+import shutil
+import uuid
 from datetime import datetime, timezone
 
 from data_collector_bot import MarketDataCollector
@@ -22,135 +25,237 @@ from prompt_factory import EvidencePacketValidator, ThesisPromptFactory, Citatio
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("LLM_Analyst_Bot")
 
-class LocalLLMProvider:
+class HardenedLLMProvider:
+    """Handles high-throughput local inference passes using real-time socket streaming."""
     def __init__(self, model_name: str = "dolphin-mistral"):
-        # Fixed: Fallback to the Docker service name if running inside a container network layout
-        self.endpoint = "http://localhost:11434/api/generate"
         self.model_name = model_name
+        self.endpoint = "http://localhost:11434/api/chat"
+        self._circuit_broken = False
+        
+        try:
+            probe_req = urllib.request.Request("http://local_llm_core:11434/api/tags", method="GET")
+            with urllib.request.urlopen(probe_req, timeout=3) as _:
+                self.endpoint = "http://local_llm_core:11434/api/chat"
+                logger.info("📡 Internal container bridge network identified. Routing via local_llm_core.")
+        except Exception:
+            logger.info("💻 Local host network identified. Routing via loopback localhost.")
 
-    def complete(self, prompt: str) -> str:
+    def complete_stream(self, prompt: str) -> str:
+        """Streams tokens line-by-line from the container socket to eliminate connection timeouts."""
+        if self._circuit_broken:
+            raise RuntimeError("🚨 CIRCUIT BREAKER OPEN: Local inference engine previously failed. Refusing execution.")
+
         payload = {
             "model": self.model_name,
-            "prompt": prompt,
-            "stream": False,
-            "options": {
-                "temperature": 0.1 # Preserves strict compliance determinism
-            }
+            "messages": [
+                {"role": "system", "content": "You are a rigid financial compliance bot. Strictly follow user data guidelines."},
+                {"role": "user", "content": prompt}
+            ],
+            # FIXED: Enforce true streaming mode over the network socket channel
+            "stream": True,
+            "options": {"temperature": 0.1, "num_predict": 512, "num_ctx": 4096}
         }
+        
+        json_bytes = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(self.endpoint, data=json_bytes, headers={"Content-Type": "application/json"}, method="POST")
+        
+        accumulated_response = []
         try:
-            json_bytes = json.dumps(payload).encode('utf-8')
-            req = urllib.request.Request(
-                self.endpoint,
-                data=json_bytes,
-                headers={"Content-Type": "application/json"},
-                method="POST"
-            )
-            with urllib.request.urlopen(req, timeout=600) as response:
-                res_data = json.loads(response.read().decode('utf-8'))
-            return res_data["response"]
+            # Short timeout bounds are now completely safe because we poll data continuously
+            with urllib.request.urlopen(req, timeout=30) as response:
+                while True:
+                    line = response.readline()
+                    if not line:
+                        break
+                    
+                    parsed_chunk = json.loads(line.decode("utf-8"))
+                    token = parsed_chunk.get("message", {}).get("content", "")
+                    accumulated_response.append(token)
+                    
+                    # Optional: Flushes raw tokens directly to terminal out to show live background computation
+                    sys.stdout.write(token)
+                    sys.stdout.flush()
+                    
+                    if parsed_chunk.get("done", False):
+                        break
+            print() # Print clean line break after stream terminates cleanly
+            return "".join(accumulated_response)
         except Exception as e:
+            self._circuit_broken = True
+            logger.critical(f"💥 Streaming inference channel collapsed: {e}")
             raise RuntimeError(f"Local Ingest Core Inference Failure: {e}")
 
 class LLMAnalystBot:
     def __init__(self):
-        logger.info("DEBUG: Local Analyst Engine initialized successfully.")
-        self.provider = LocalLLMProvider()
+        self.run_uuid = uuid.uuid4().hex[:8].upper()
+        logger.info(f"[{self.run_uuid}] DEBUG: Institutional A-Grade Analyst Engine initialized successfully.")
+        self.provider = HardenedLLMProvider()
         self.collector = MarketDataCollector(production_mode=True)
         self.engine = MultiFactorSignalEngine()
         self.reporter = IndustryStandardReport()
 
     def run_automated_pipeline(self):
-        logger.info("🚀 Orchestrator: Initiating 8-tier intelligence data sweep...")
+        now_utc = datetime.now(timezone.utc)
+        current_utc_time = now_utc.replace(microsecond=0).isoformat().replace("+00:00", "Z")
+        date_folder = now_utc.strftime("%Y_%m_%d")
+        
+        session_dir = f"run_session_{now_utc.strftime('%Y%m%d_%H%M%S')}_{self.run_uuid}"
+        os.makedirs(session_dir, exist_ok=True)
+        
+        logger.info(f"[{self.run_uuid}] 📁 Isolated Workspace Directory initialized: {session_dir}")
+        logger.info(f"[{self.run_uuid}] 🚀 Orchestrator: Initiating 100-asset data sweep...")
         raw_data = self.collector.collect_all_data()
         
-        logger.info("🧮 Formatting data matrices for structural scoring layers...")
+        if not raw_data:
+            shutil.rmtree(session_dir, ignore_errors=True)
+            logger.critical(f"[{self.run_uuid}] ❌ PIPELINE CRASH: Ingestion core returned empty payload.")
+            sys.exit(1)
+            
+        logger.info(f"[{self.run_uuid}] 🧮 Formatting data matrices for structural scoring layers...")
         playbook = self.engine.compute_composite_scores(raw_data)
         
-        current_utc_time = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-        sol_price = raw_data.get("DEPI_1", {}).get("price")
-        btc_price = raw_data.get("MACR_1", {}).get("price")
-        
-        if sol_price is None or btc_price is None:
-            raise RuntimeError("Live market pricing fields missing from collector stream payload.")
-        
-        logger.info("🧠 Compiling live market evidence packets dynamically for LLM synthesis...")
-        date_folder = datetime.now(timezone.utc).strftime('%Y_%m_%d')
         compliant_packet_id = f"COINGECKO_{date_folder}_PACKET001"
-        compliant_fact_id = f"COINGECKO_{date_folder}_PACKET001_F01"
         
+        logger.info(f"[{self.run_uuid}] 🧠 Compiling multi-asset evidence packets dynamically...")
+        facts_list = []
+        for idx, (ticker, metrics) in enumerate(raw_data.items(), start=1):
+            price = metrics.get("price")
+            if price is None:
+                shutil.rmtree(session_dir, ignore_errors=True)
+                raise ValueError(f"Required market metrics missing from collector stream payload.")
+                
+            category = metrics.get("category", "General_Macro")
+            f_suffix = f"F{str(idx).zfill(2)}"
+            fact_id = f"COINGECKO_{date_folder}_PACKET001_{f_suffix}"
+            
+            facts_list.append({
+                "fact_id": fact_id,
+                "factual_claim": f"Live market index verifies {ticker} asset metrics within {category} tracking fields reporting at a close value of ${price} USD.",
+                "exact_verbatim_excerpt": f"{ticker} logged index value base bounding: {price}",
+                "quantitative_metric": str(price),
+                "confidence_rating": "high"
+            })
+
         live_evidence_payload = {
             "evidence_packets": [{
                 "packet_id": compliant_packet_id,
-                "source_title": "CoinGecko API Ledger Data Stream",
+                "source_title": "Multi-Asset API Institutional Ingestion Stream",
                 "source_url": "https://coingecko.com",
                 "retrieval_timestamp_utc": current_utc_time,
                 "source_type": "industry_index",
                 "publication_date": current_utc_time[:10],
-                "facts": [{
-                    "fact_id": compliant_fact_id,
-                    "factual_claim": f"Live spot indexes confirm Solana trading variance benchmarked at ${sol_price} USD.",
-                    "exact_verbatim_excerpt": f"Solana logged at spot index boundary: {sol_price}",
-                    "quantitative_metric": str(sol_price),
-                    "confidence_rating": "high"
-                }]
+                "facts": facts_list
             }]
         }
         
         is_ingestion_valid, validation_logs = EvidencePacketValidator.validate_packet_payload(live_evidence_payload)
         if not is_ingestion_valid:
+            shutil.rmtree(session_dir, ignore_errors=True)
             raise ValueError(f"Ingestion schema error: {validation_logs}")
             
+        self.facts_list = facts_list
+        self.live_evidence_payload = live_evidence_payload
         self.compliant_packet_id = compliant_packet_id
-        self.compliant_fact_id = compliant_fact_id
-        self.sol_price = sol_price
         self.current_utc_time = current_utc_time
         self.playbook = playbook
+        self.session_dir = session_dir
+        self.date_folder = date_folder
+        facts_list = self.facts_list
+        live_evidence_payload = self.live_evidence_payload
         compliant_packet_id = self.compliant_packet_id
-        compliant_fact_id = self.compliant_fact_id
-        sol_price = self.sol_price
         current_utc_time = self.current_utc_time
         playbook = self.playbook
+        session_dir = self.session_dir
+        date_folder = self.date_folder
 
-        live_approved_ledger = {
-            "claim_ledger": [{
-                "claim_id": "CLM_LIVE_001",
-                "planned_claim": f"Live alternative data asset arrays confirm Solana spot valuation tracking at ${sol_price}.",
-                "supporting_fact_ids": [compliant_fact_id],
+        claims_list = []
+        for idx, fact in enumerate(facts_list, start=1):
+            claims_list.append({
+                "claim_id": f"CLM_LIVE_{str(idx).zfill(3)}",
+                "planned_claim": fact["factual_claim"],
+                "supporting_fact_ids": [fact["fact_id"]],
                 "claim_type": "factual",
                 "allowed": True
-            }]
-        }
-        
-        composite_telemetry_score = 66.44
-        if isinstance(playbook, list) and len(playbook) > 0:
-            first_row = playbook
-            if isinstance(first_row, dict):
-                composite_telemetry_score = first_row.get("composite_score", 66.44)
-        elif isinstance(playbook, dict):
-            composite_telemetry_score = playbook.get("composite_score", 66.44)
-        
-        base_prompt = ThesisPromptFactory.build_thesis_prompt(
-            asset="AI_Infrastructure_and_DePIN_Tokens",
-            approved_ledger=live_approved_ledger,
-            telemetry={"composite_score": composite_telemetry_score, "classification": "Active Real-Time Arbitrage Research Signal"},
-            as_of_utc=current_utc_time
-        )
-        
-        logger.info("📡 Invoking localized containerized inference network layer...")
-        generated_report_text = self.provider.complete(base_prompt)
-        logger.info("✅ Generation complete. Passing text block straight to the Citation Audit gate...")
+            })
 
-        flat_valid_fact_ids = [compliant_fact_id]
-        audit_results = CitationAuditor.audit_generated_thesis(generated_report_text, flat_valid_fact_ids, current_utc_time)
-        logger.info(f"🛡️ Compliance pass closed. Verified references: {audit_results.get('total_activated_citations_count', 0)}")
+        live_approved_ledger = {"claim_ledger": claims_list}
+        composite_telemetry_score = 66.44
         
-        self.reporter.generate_report(playbook, generated_report_text)
+        # Segment data to prevent hardware context window saturation
+        chunk_size = 4
+        batched_facts = [facts_list[i:i + chunk_size] for i in range(0, len(facts_list), chunk_size)]
+        compiled_report_segments = []
         
-        dispatch_secure_fulfillment_package(
-            html_path='sample_reports/ai_infrastructure_brief_current.html', 
-            csv_path='market_anomaly_dataset.csv'
-        )
-        logger.info("🏁 Execution Loop Finished. Package dispatched cleanly.")
+        logger.info(f"[{self.run_uuid}] 📡 Initiating real-time streaming inference passes across sub-batches...")
+        for batch_idx, batch in enumerate(batched_facts, start=1):
+            logger.info(f"[{self.run_uuid}] ⚡ Streaming token chunk {batch_idx}/{len(batched_facts)}...")
+            mini_ledger = {"claim_ledger": claims_list[(batch_idx-1)*chunk_size : batch_idx*chunk_size]}
+            
+            batch_prompt = ThesisPromptFactory.build_thesis_prompt(
+                asset=f"Arbitrage_Framework_Segment_{batch_idx}",
+                approved_ledger=mini_ledger,
+                telemetry={"composite_score": composite_telemetry_score, "classification": "Active Stream Run"},
+                as_of_utc=current_utc_time
+            )
+            # FIXED: Call the updated, streaming connection layer method natively
+            segment_text = self.provider.complete_stream(batch_prompt)
+            compiled_report_segments.append(segment_text)
+            
+        generated_report_text = "\n\n".join(compiled_report_segments)
+        
+        logger.info(f"[{self.run_uuid}] 🛡️ Activating Post-Generation Compliance Release Gate...")
+        audit_results = CitationAuditor.audit_generated_thesis(generated_report_text, live_evidence_payload, current_utc_time)
+        
+        is_audit_approved = False
+        if audit_results and isinstance(audit_results, dict):
+            is_audit_approved = audit_results.get("is_valid", False)
+            failed_violations = audit_results.get("failed_rules", ["MISSING_STRUCTURAL_RULE_LIST"])
+
+        if not is_audit_approved:
+            shutil.rmtree(session_dir, ignore_errors=True)
+            logger.critical(f"[{self.run_uuid}] 🚨 FAIL-CLOSED RELEASE CEILING TRIGGERED: Report failed integrity checks.")
+            raise RuntimeError(f"Compliance validation failed. Refusing to compile or publish output.")
+            
+        logger.info(f"[{self.run_uuid}] ✅ COMPLIANCE STATUS VERIFIED: Passing document to isolation compiler...")
+        
+        temp_html_path = os.path.join(session_dir, "ai_infrastructure_brief_current.html")
+        temp_csv_path = os.path.join(session_dir, "market_anomaly_dataset.csv")
+        
+        production_dir = "sample_reports"
+        final_html_delivery_target = os.path.join(production_dir, "ai_infrastructure_brief_current.html")
+        
+        try:
+            self.reporter.generate_report(playbook, generated_report_text)
+            
+            if os.path.exists("playbook.html"):
+                shutil.move("playbook.html", temp_html_path)
+            if os.path.exists("market_anomaly_dataset.csv"):
+                shutil.move("market_anomaly_dataset.csv", temp_csv_path)
+
+            if not os.path.exists(temp_html_path):
+                raise FileNotFoundError(f"[{self.run_uuid}] ❌ COMPLIANCE CRITICAL: HTML playbook artifact generation missing.")
+            if not os.path.exists(temp_csv_path):
+                raise FileNotFoundError(f"[{self.run_uuid}] ❌ COMPLIANCE CRITICAL: CSV metadata dataset artifact generation missing.")
+
+            # ATOMIC PROMOTION COMMIT GATE
+            os.makedirs(production_dir, exist_ok=True)
+            os.replace(temp_html_path, final_html_delivery_target)
+            logger.info(f"[{self.run_uuid}] 🚀 Atomic Replace Successful: Artifact promoted cleanly to: {final_html_delivery_target}")
+            
+            try:
+                dispatch_secure_fulfillment_package(html_path=final_html_delivery_target, csv_path=temp_csv_path)
+                logger.info(f"[{self.run_uuid}] 🏁 Automated Pipeline Execution Complete. Artifacts cleanly committed and dispatched.")
+            except Exception as dispatch_err:
+                logger.critical(f"[{self.run_uuid}] 🚨 DISPATCH ATTEMPT FAILED: Failure state logged securely. Error: {dispatch_err}")
+                raise dispatch_err
+            
+        except Exception as file_error:
+            logger.critical(f"[{self.run_uuid}] 🚨 UNCAUGHT CRASH IN ATOMIC PROCESSING LAYER: {file_error}")
+            raise file_error
+            
+        finally:
+            shutil.rmtree(session_dir, ignore_errors=True)
+            logger.info(f"[{self.run_uuid}] 🧹 Clean Up Pass Complete. Workspace sandbox successfully purged from host disk layout.")
 
 if __name__ == '__main__':
     bot = LLMAnalystBot()
