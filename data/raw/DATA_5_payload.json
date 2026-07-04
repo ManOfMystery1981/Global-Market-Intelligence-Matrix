@@ -1,0 +1,9 @@
+{
+    "price": 91.0,
+    "volume_24h": 6250000.0,
+    "historical_avg_volume": 5800000.0,
+    "volatility": 0.32,
+    "historical_avg_price": 89.18,
+    "source": "Public Statistical Institutional Ledger",
+    "category": "Data_Center_Capex"
+}

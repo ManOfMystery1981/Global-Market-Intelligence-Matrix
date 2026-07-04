@@ -1,0 +1,9 @@
+{
+    "price": 142.1,
+    "volume_24h": 5250000.0,
+    "historical_avg_volume": 5000000.0,
+    "volatility": 0.24,
+    "historical_avg_price": 139.26,
+    "source": "CoinGecko V3 REST API Ingestion Channel",
+    "category": "DePIN_Compute_Tokens"
+}

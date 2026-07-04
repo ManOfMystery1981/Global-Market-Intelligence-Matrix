@@ -1,0 +1,9 @@
+{
+    "price": 65.9,
+    "volume_24h": 5500000.0,
+    "historical_avg_volume": 5200000.0,
+    "volatility": 0.26,
+    "historical_avg_price": 64.58,
+    "source": "Public Statistical Institutional Ledger",
+    "category": "Grid_Power_Constraints"
+}

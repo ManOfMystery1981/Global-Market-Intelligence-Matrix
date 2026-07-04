@@ -1,0 +1,9 @@
+{
+    "price": 111.7,
+    "volume_24h": 5250000.0,
+    "historical_avg_volume": 5000000.0,
+    "volatility": 0.24,
+    "historical_avg_price": 109.47,
+    "source": "Public Statistical Institutional Ledger",
+    "category": "Macro_Liquidity_Channels"
+}
