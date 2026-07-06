@@ -1,0 +1,11 @@
+Here's the sequence to get everything synced cleanly:
+Step 1: Check current status first
+bashcd ~/local-ai/finance
+git status
+Step 2: Stage and commit the v2 files
+bashgit add v2/
+git commit -m "feat: add v2 DeepSeek+Grok pipeline with multi-source data collection"
+Step 3: Remove the old v2 placeholder structure (the empty .gitkeep folders from earlier)
+Actually before doing anything destructive, paste the output of:
+bashfind v2/ -type f | sort
+That way we can confirm exactly what's in the v2 folder right now — the real files you copied in vs the empty .gitkeep placeholders — before deciding what to remove. We want to make sure all 12 real files are there before touching anything.
