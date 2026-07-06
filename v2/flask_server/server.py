@@ -22,7 +22,7 @@ from flask import Flask, request, jsonify
 
 # Import pipeline modules
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "backend"))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from bots.data_collector     import collect_all_data
 from bots.collaborative_writer import generate_report
 from bots.delivery_agent     import send_report
@@ -107,7 +107,7 @@ def equity_snapshot():
                 "source":     "Finnhub",
             }
         except Exception as e:
-            print(f"Finnhub fetch failed for {ticker}: {e}")
+            logger.warning(f"Finnhub fetch failed for {ticker}: {e}")
     result["_timestamp"] = datetime.now(timezone.utc).isoformat()
     result["_source"]    = "Finnhub"
     return jsonify(result)
