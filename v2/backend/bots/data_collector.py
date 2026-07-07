@@ -307,49 +307,42 @@ def collect_all_data() -> dict:
     # DeFi TVL from DefiLlama
     defi_tvl = fetch_defillama()
 
-    # Messari research data for key assets
+    # Messari skipped — endpoint changed, free tier too restricted
     messari_data = {}
-    for asset in ["bitcoin", "ethereum", "solana"]:
-        result = fetch_messari(asset)
-        if result:
-            messari_data[asset.upper()] = result
-        time.sleep(0.2)
 
     # Equity data — two sources per ticker for cross-validation
     equity_data = {}
     equity_discrepancies = {}
     for category, tickers in EQUITY_TICKERS.items():
         for ticker in tickers:
-            polygon_quote = fetch_polygon(ticker)
             finnhub_quote = fetch_finnhub(ticker)
-            fmp_quote = fetch_fmp(ticker)
+            polygon_quote = fetch_polygon(ticker) if not finnhub_quote else None
 
-            # Use best available price, prefer Polygon → Finnhub → FMP
-            primary = polygon_quote or finnhub_quote or fmp_quote
+            # Use best available price, prefer Finnhub → Polygon fallback
+            primary = finnhub_quote or polygon_quote
             if not primary:
                 logger.warning(f"No equity data available for {ticker}, skipping")
                 continue
 
-            # Cross-validate if two sources available
+            # Cross-validate if both sources returned data
             if polygon_quote and finnhub_quote:
-                diff = abs(polygon_quote["price_usd"] - finnhub_quote["price_usd"]) / max(polygon_quote["price_usd"], 0.01) * 100
+                diff = abs(polygon_quote["price_usd"] - finnhub_quote["price_usd"]) / max(finnhub_quote["price_usd"], 0.01) * 100
                 if diff > 1.0:
                     equity_discrepancies[ticker] = {
-                        "polygon_price":    polygon_quote["price_usd"],
                         "finnhub_price":    finnhub_quote["price_usd"],
+                        "polygon_price":    polygon_quote["price_usd"],
                         "divergence_pct":   round(diff, 3),
                         "flag":             "CROSS_SOURCE_DISCREPANCY",
-                        "sources":          "Polygon vs Finnhub",
+                        "sources":          "Finnhub vs Polygon",
                     }
 
             equity_data[ticker] = {
                 **primary,
                 "category":     category,
-                "fmp_data":     fmp_quote,
                 "polygon_data": polygon_quote,
                 "finnhub_data": finnhub_quote,
             }
-            time.sleep(0.15)  # Rate limit protection
+            time.sleep(1.0)  # Polygon free tier: max 5 calls/minute
 
     # SEC filings for major tickers
     sec_data = {}

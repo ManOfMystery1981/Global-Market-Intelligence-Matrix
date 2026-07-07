@@ -22,7 +22,7 @@ from flask import Flask, request, jsonify
 
 # Import pipeline modules
 import sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "backend"))
 from bots.data_collector     import collect_all_data
 from bots.collaborative_writer import generate_report
 from bots.delivery_agent     import send_report
@@ -75,6 +75,12 @@ def run_pipeline_for_customer(email: str, report_type: str):
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
+@app.route("/", methods=["GET"])
+def index():
+    """Serve the frontend."""
+    html_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "index2.html")
+    with open(html_path, "r") as f:
+        return f.read(), 200, {"Content-Type": "text/html"}
 @app.route("/api/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()})

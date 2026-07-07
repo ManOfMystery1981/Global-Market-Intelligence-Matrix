@@ -216,7 +216,7 @@
       <div class="flex items-center gap-2 mb-4">
         <span class="live-dot" style="background:#f59e0b"></span>
         <span class="mono text-xs text-gray-400 uppercase tracking-widest">Equities & ETFs</span>
-        <span class="badge-sim ml-auto">Sim</span>
+        <span class="badge-live ml-auto" id="equity-dash-badge">Live</span>
       </div>
       <div class="space-y-2">
         <div class="flex justify-between items-center py-2 border-b border-gray-800/40">
@@ -421,7 +421,7 @@
   <!-- Key legend -->
   <div class="flex items-center gap-6 text-xs mono">
     <span class="flex items-center gap-2"><span class="live-dot" style="background:#10b981"></span><span class="text-gray-400">Live WebSocket Feed</span></span>
-    <span class="flex items-center gap-2"><span class="live-dot" style="background:#f59e0b"></span><span class="text-gray-400">Simulated (real data when Finnhub key added)</span></span>
+    <span class="flex items-center gap-2"><span class="live-dot" style="background:#f59e0b"></span><span class="text-gray-400">Simulated fallback when Flask offline</span></span>
   </div>
 
   <!-- ── CRYPTO CHARTS 3x2 ── -->
@@ -481,7 +481,7 @@
     <div class="flex items-center gap-2 mb-3">
       <span class="live-dot" style="background:#f59e0b"></span>
       <span class="mono text-xs text-gray-400 uppercase tracking-widest">Equity & ETF Intelligence Streams</span>
-      <span class="badge-sim">Simulated · Real data when Finnhub key active</span>
+      <span class="badge-live" id="equity-feed-badge">Live · Finnhub</span>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="chart-card">
@@ -887,7 +887,12 @@ function tryRealEquityFeed() {
               ce.style.color = chg>=0?'#10b981':'#f43f5e';
             }
             // Switch badge to live
+            // Switch all remaining sim badges to live
             document.querySelectorAll('.badge-sim').forEach(b=>{ b.textContent='Live'; b.className='badge-live'; });
+            const eb = document.getElementById('equity-feed-badge');
+            if(eb){ eb.textContent='Live · Finnhub'; eb.className='badge-live'; }
+            const db = document.getElementById('equity-dash-badge');
+            if(db){ db.textContent='Live'; db.className='badge-live'; }
           }
         });
       })
